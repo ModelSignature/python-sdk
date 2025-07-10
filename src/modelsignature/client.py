@@ -142,7 +142,7 @@ class ModelSignatureClient:
                 logging.debug("Request %s failed: %s", req_id, exc)
                 if attempt >= self.max_retries - 1:
                     raise NetworkError(str(exc))
-                delay = backoff[min(attempt, len(backoff) - 1)]
+                delay = float(backoff[min(attempt, len(backoff) - 1)])
                 delay *= 0.5 + random.random()
                 time.sleep(delay)
                 continue
@@ -212,7 +212,7 @@ class ModelSignatureClient:
                         "ModelSignature API is temporarily unavailable"
                     )
                     # fmt: on
-                delay = backoff[min(attempt, len(backoff) - 1)]
+                delay = float(backoff[min(attempt, len(backoff) - 1)])
                 delay *= 0.5 + random.random()
                 time.sleep(delay)
                 continue
@@ -228,7 +228,7 @@ class ModelSignatureClient:
                         f"Server error {resp.status_code}: {detail}"
                     )
                     # fmt: on
-                delay = backoff[min(attempt, len(backoff) - 1)]
+                delay = float(backoff[min(attempt, len(backoff) - 1)])
                 delay *= 0.5 + random.random()
                 time.sleep(delay)
                 continue
