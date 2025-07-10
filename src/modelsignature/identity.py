@@ -1,5 +1,6 @@
 import re
-from typing import List, Optional
+from typing import List, Optional, Dict
+from difflib import SequenceMatcher
 from dataclasses import dataclass
 
 
@@ -13,11 +14,50 @@ class IdentityPattern:
     confidence: float
 
 
+PATTERN_CATEGORIES: Dict[str, List[str]] = {
+    "direct_identity": [
+        "who are you",
+        "what are you",
+        "what's your name",
+        "what is your name",
+        "tell me about yourself",
+    ],
+    "model_specific": [
+        "are you gpt",
+        "are you claude",
+        "are you chatgpt",
+        "which model are you",
+        "what model is this",
+        "which ai am i talking to",
+    ],
+    "capability": [
+        "what can you do",
+        "what are your capabilities",
+        "what are you capable of",
+        "how do you work",
+    ],
+    "verification": [
+        "prove who you are",
+        "verify yourself",
+        "how do i know you're real",
+        "are you really",
+        "confirm your identity",
+    ],
+}
+
+MULTILINGUAL_PATTERNS: Dict[str, List[str]] = {
+    "french": ["qui êtes-vous", "qu'est-ce que vous êtes"],
+    "spanish": ["quién eres", "qué eres"],
+    "german": ["wer bist du", "was bist du"],
+}
+
+
 class IdentityQuestionDetector:
     """Detects if user input is asking about AI identity."""
 
     def __init__(self, custom_patterns: Optional[List[str]] = None):
         self.patterns = self._load_default_patterns()
+        self.multilingual = self._load_multilingual_patterns()
         if custom_patterns:
             self.add_patterns(custom_patterns)
 
@@ -33,60 +73,82 @@ class IdentityQuestionDetector:
             )
 
     def is_identity_question(self, text: str, threshold: float = 0.7) -> bool:
-        return self.get_confidence(text) >= threshold
+        if self._quick_pattern_match(text):
+            return True
+        normalized = self._normalize_text(text)
+        if self._normalized_pattern_match(normalized):
+            return True
+        return self._fuzzy_match(text, threshold)
 
     def get_confidence(self, text: str) -> float:
-        text = text.lower()
+        normalized = self._normalize_text(text)
         score = 0.0
         for pat in self.patterns:
-            if pat.regex.search(text):
+            if pat.regex.search(normalized):
                 score = max(score, pat.confidence)
+        for lang_pats in self.multilingual.values():
+            for rp in lang_pats:
+                if rp.search(normalized):
+                    score = max(score, 0.9)
+        if score < 0.8 and self._fuzzy_match(text, 0.8):
+            score = max(score, 0.8)
         return score
 
+    def _quick_pattern_match(self, text: str) -> bool:
+        for pat in self.patterns:
+            if pat.regex.search(text):
+                return True
+        for lang_pats in self.multilingual.values():
+            for rp in lang_pats:
+                if rp.search(text):
+                    return True
+        return False
+
+    def _normalize_text(self, text: str) -> str:
+        text = text.lower()
+        text = re.sub(r"[?!.,]", "", text)
+        replacements = {
+            r"\bu\b": "you",
+            r"\br\b": "are",
+            r"wat": "what",
+        }
+        for pattern, repl in replacements.items():
+            text = re.sub(pattern, repl, text)
+        return text
+
+    def _normalized_pattern_match(self, text: str) -> bool:
+        for pat in self.patterns:
+            if pat.regex.search(text):
+                return True
+        for lang_pats in self.multilingual.values():
+            for rp in lang_pats:
+                if rp.search(text):
+                    return True
+        return False
+
+    def _fuzzy_match(self, text: str, threshold: float) -> bool:
+        cmp = text.lower()
+        patterns = [p.pattern for p in self.patterns]
+        for lang_pats in self.multilingual.values():
+            patterns.extend([rp.pattern for rp in lang_pats])
+        for pat in patterns:
+            ratio = SequenceMatcher(None, cmp, pat).ratio()
+            if ratio >= threshold:
+                return True
+        return False
+
     def _load_default_patterns(self) -> List[IdentityPattern]:
-        patterns = [
-            ("who are you", r"\bwho\s+are\s+you\b", "direct", 0.95),
-            ("what are you", r"\bwhat\s+are\s+you\b", "direct", 0.95),
-            (
-                "what's your name",
-                r"\bwhat(?:'s|'s|\s+is)\s+your\s+name\b",
-                "direct",
-                0.9,
-            ),
-            ("are you gpt", r"\bare\s+you\s+gpt", "model_specific", 0.9),
-            ("are you claude", r"\bare\s+you\s+claude", "model_specific", 0.9),
-            (
-                "which model",
-                r"\bwhich\s+(?:ai\s+)?model\b",
-                "model_specific",
-                0.85,
-            ),
-            (
-                "what can you do",
-                r"\bwhat\s+can\s+you\s+do\b",
-                "capability",
-                0.7,
-            ),
-            (
-                "your capabilities",
-                r"\byour\s+capabilities\b",
-                "capability",
-                0.75,
-            ),
-            (
-                "verify yourself",
-                r"\bverify\s+yourself\b",
-                "verification",
-                0.95,
-            ),
-            (
-                "prove you are",
-                r"\bprove\s+(?:you(?:'re|'re|\s+are)|that)\b",
-                "verification",
-                0.9,
-            ),
-        ]
-        return [
-            IdentityPattern(p[0], re.compile(p[1], re.IGNORECASE), p[2], p[3])
-            for p in patterns
-        ]
+        patterns = []
+        for category, pats in PATTERN_CATEGORIES.items():
+            for p in pats:
+                regex = re.compile(re.escape(p), re.IGNORECASE)
+                confidence = 0.9 if category == "direct_identity" else 0.85
+                patterns.append((p, regex, category, confidence))
+
+        return [IdentityPattern(p[0], p[1], p[2], p[3]) for p in patterns]
+
+    def _load_multilingual_patterns(self) -> Dict[str, List[re.Pattern]]:
+        compiled: Dict[str, List[re.Pattern]] = {}
+        for lang, pats in MULTILINGUAL_PATTERNS.items():
+            compiled[lang] = [re.compile(re.escape(p), re.IGNORECASE) for p in pats]
+        return compiled

@@ -8,6 +8,13 @@ Official Python SDK for ModelSignature - AI Model Identity Verification
 pip install modelsignature
 ```
 
+## Getting Started
+
+1. [Sign up](https://modelsignature.com) and obtain an API key
+2. Install the SDK with pip
+3. Initialize the client with your API key
+4. Create verification links whenever a user asks "Who are you?"
+
 ## Quick Start
 
 ```python
@@ -37,6 +44,11 @@ print(f"Verification URL: {verification.verification_url}")
 - [API Reference](./docs/api_reference.md)
 - [Examples](./examples)
 - [Contributing](./CONTRIBUTING.md)
+
+## Troubleshooting
+
+If you encounter authentication errors, ensure your API key is correct and has
+the necessary permissions. For rate limit errors, wait a few seconds and retry.
 
 ## License
 
