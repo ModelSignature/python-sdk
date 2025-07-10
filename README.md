@@ -1,6 +1,12 @@
 # ModelSignature Python SDK
 
-Official Python SDK for ModelSignature - AI Model Identity Verification
+[![PyPI version](https://badge.fury.io/py/modelsignature.svg)](https://badge.fury.io/py/modelsignature)
+[![Python Support](https://img.shields.io/pypi/pyversions/modelsignature.svg)](https://pypi.org/project/modelsignature/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Cryptographic identity verification for AI models.**
+
+ModelSignature lets your application prove its identity with a short verification link. Use it whenever users ask "Who are you?" or similar questions.
 
 ## Installation
 
@@ -8,48 +14,71 @@ Official Python SDK for ModelSignature - AI Model Identity Verification
 pip install modelsignature
 ```
 
-## Getting Started
-
-1. [Sign up](https://modelsignature.com) and obtain an API key
-2. Install the SDK with pip
-3. Initialize the client with your API key
-4. Create verification links whenever a user asks "Who are you?"
+Supports Python 3.8+ and only requires `requests`.
 
 ## Quick Start
+
+1. [Sign up](https://modelsignature.com) to obtain an API key.
+2. Initialize the client with your API key.
+3. Create a verification whenever users ask about identity.
 
 ```python
 from modelsignature import ModelSignatureClient
 
-client = ModelSignatureClient(api_key='your_api_key')
+client = ModelSignatureClient(api_key="your_api_key")
 
 verification = client.create_verification(
-    model_id='your_model_id',
-    user_fingerprint='session_123'
+    model_id="your_model_id",
+    user_fingerprint="session_123",
 )
 
-print(f"Verification URL: {verification.verification_url}")
+print(verification.verification_url)
 ```
 
-## Features
+## Identity Question Detection
 
-- ✅ Full API coverage
-- ✅ Automatic retry logic
-- ✅ Built-in identity question detection
-- ✅ Type hints and dataclasses
-- ✅ Comprehensive error handling
-- ✅ Async support (optional)
+The SDK includes a helper to detect identity questions:
 
-## Documentation
+```python
+from modelsignature import IdentityQuestionDetector
 
-- [API Reference](./docs/api_reference.md)
-- [Examples](./examples)
-- [Contributing](./CONTRIBUTING.md)
+detector = IdentityQuestionDetector()
 
-## Troubleshooting
+detector.is_identity_question("Who are you?")      # True
+```
 
-If you encounter authentication errors, ensure your API key is correct and has
-the necessary permissions. For rate limit errors, wait a few seconds and retry.
+It recognizes direct questions, variations with typos, and phrases in several languages (English, French, Spanish, German and Russian).
+
+## API Overview
+
+```python
+client = ModelSignatureClient(
+    api_key="your_key",
+    base_url="https://api.modelsignature.com",  # optional
+    timeout=30,
+    max_retries=3,
+    debug=False,
+)
+```
+
+Main methods:
+
+- `create_verification(model_id, user_fingerprint, metadata=None)`
+- `verify_token(token)`
+- `register_provider(company_name, email, website)`
+- `register_model(model_name, version, description, api_endpoint, model_type)`
+
+See [API Reference](docs/api_reference.md) for full details.
+
+## Examples
+
+Sample integrations can be found in the [examples](examples/) directory, including OpenAI and middleware demos.
+
+## Contributing
+
+We welcome contributions! See the [CONTRIBUTING](CONTRIBUTING.md) guide for setup instructions.
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
