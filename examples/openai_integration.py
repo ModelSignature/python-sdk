@@ -43,7 +43,10 @@ class VerifiedGPT:
             metadata={'client': 'openai_integration_example'}
         )
         expiry = datetime.now() + timedelta(minutes=14)
-        self.verification_cache[session_id] = (verification.verification_url, expiry)
+        self.verification_cache[session_id] = (
+            verification.verification_url,
+            expiry,
+        )
         return verification.verification_url
 
     def chat(self, messages: list, session_id: str) -> str:
@@ -54,8 +57,9 @@ class VerifiedGPT:
             url = self.get_verification_url(session_id)
             if confidence > 0.8:
                 return (
-                    f"I am {self.model_name}, an AI assistant created by OpenAI. "
-                    f"You can independently verify this conversation at: {url}"
+                    f"I am {self.model_name}, an AI assistant created by "
+                    f"OpenAI. You can independently verify this conversation "
+                    f"at: {url}"
                 )
             response = self._get_openai_response(messages)
             return f"{response}\n\nYou can verify my identity at: {url}"
@@ -96,4 +100,3 @@ if __name__ == '__main__':
         response = gpt.chat(conversation, session_id)
         print(f"\nGPT-4: {response}")
         conversation.append({'role': 'assistant', 'content': response})
-

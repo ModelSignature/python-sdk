@@ -15,7 +15,10 @@ class TestRealAPI:
     def client(self):
         return ModelSignatureClient(
             api_key=os.getenv('MODELSIGNATURE_TEST_API_KEY'),
-            base_url=os.getenv('MODELSIGNATURE_TEST_URL', 'https://api.modelsignature.com'),
+            base_url=os.getenv(
+                'MODELSIGNATURE_TEST_URL',
+                'https://api.modelsignature.com',
+            ),
         )
 
     def test_create_verification_real(self, client):
@@ -23,7 +26,9 @@ class TestRealAPI:
             model_id='test_model_123',
             user_fingerprint='test_session_456',
         )
-        assert result.verification_url.startswith('https://modelsignature.com/v/')
+        assert result.verification_url.startswith(
+            'https://modelsignature.com/v/'
+        )
         assert result.token
         assert result.expires_in > 0
 

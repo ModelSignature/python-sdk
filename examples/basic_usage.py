@@ -35,7 +35,8 @@ for query in queries:
                 user_fingerprint=f'session_{hash(query)}'
             )
             print(
-                f"AI: I am GPT-4. You can verify this at: {verification.verification_url}"
+                "AI: I am GPT-4. You can verify this at: "
+                f"{verification.verification_url}"
             )
             print(f"    (Token expires in {verification.expires_in} seconds)")
         except Exception as e:

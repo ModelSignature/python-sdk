@@ -177,13 +177,17 @@ class ModelSignatureClient:
 
             if resp.status_code in {502, 503, 504}:
                 if attempt >= self.max_retries - 1:
-                    raise NetworkError("ModelSignature API is temporarily unavailable")
+                    raise NetworkError(
+                        "ModelSignature API is temporarily unavailable"
+                    )
                 time.sleep(backoff[min(attempt, len(backoff) - 1)])
                 continue
 
             if resp.status_code >= 500:
                 if attempt >= self.max_retries - 1:
-                    raise NetworkError("ModelSignature API is temporarily unavailable")
+                    raise NetworkError(
+                        "ModelSignature API is temporarily unavailable"
+                    )
                 time.sleep(backoff[min(attempt, len(backoff) - 1)])
                 continue
 
