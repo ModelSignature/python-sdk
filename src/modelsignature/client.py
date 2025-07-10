@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Dict, Any
-import requests
+import requests  # type: ignore[import]
 from urllib.parse import urljoin
 
 from .exceptions import (
@@ -12,7 +12,6 @@ from .exceptions import (
     RateLimitError,
 )
 from .models import VerificationResponse, ModelResponse, ProviderResponse
-from .auth import AuthHandler
 from .constants import DEFAULT_BASE_URL, DEFAULT_TIMEOUT
 
 
@@ -53,12 +52,16 @@ class ModelSignatureClient:
     def register_provider(
         self, company_name: str, email: str, website: str, **kwargs
     ) -> ProviderResponse:
-        data = {"company_name": company_name, "email": email, "website": website}
+        data = {
+            "company_name": company_name,
+            "email": email,
+            "website": website,
+        }
         data.update(kwargs)
         resp = self._request("POST", "/api/v1/providers/register", json=data)
         return ProviderResponse(
-            provider_id=resp.get("provider_id"),
-            api_key=resp.get("api_key"),
+            provider_id=str(resp.get("provider_id", "")),
+            api_key=str(resp.get("api_key", "")),
             message=resp.get("message", ""),
             raw_response=resp,
         )
@@ -82,7 +85,7 @@ class ModelSignatureClient:
         data.update(kwargs)
         resp = self._request("POST", "/api/v1/models/register", json=data)
         return ModelResponse(
-            model_id=resp.get("model_id"),
+            model_id=str(resp.get("model_id", "")),
             name=resp.get("name", model_name),
             version=resp.get("version", version),
             message=resp.get("message", ""),

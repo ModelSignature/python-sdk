@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 @dataclass
 class VerificationResponse:
     """Response from create_verification endpoint."""
+
     verification_url: str
     token: str
     expires_in: int
@@ -19,12 +20,14 @@ class VerificationResponse:
         if not created:
             return False
         created_dt = datetime.fromisoformat(created)
-        return datetime.utcnow() > created_dt + timedelta(seconds=self.expires_in)
+        expiry = created_dt + timedelta(seconds=self.expires_in)
+        return datetime.utcnow() > expiry
 
 
 @dataclass
 class ProviderResponse:
     """Response from provider registration."""
+
     provider_id: str
     api_key: str
     message: str
@@ -34,6 +37,7 @@ class ProviderResponse:
 @dataclass
 class ModelResponse:
     """Response from model registration."""
+
     model_id: str
     name: str
     version: str

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class IdentityPattern:
     """Represents an identity question pattern."""
+
     pattern: str
     regex: re.Pattern
     category: str
@@ -46,14 +47,44 @@ class IdentityQuestionDetector:
         patterns = [
             ("who are you", r"\bwho\s+are\s+you\b", "direct", 0.95),
             ("what are you", r"\bwhat\s+are\s+you\b", "direct", 0.95),
-            ("what's your name", r"\bwhat(?:'s|'s|\s+is)\s+your\s+name\b", "direct", 0.9),
+            (
+                "what's your name",
+                r"\bwhat(?:'s|'s|\s+is)\s+your\s+name\b",
+                "direct",
+                0.9,
+            ),
             ("are you gpt", r"\bare\s+you\s+gpt", "model_specific", 0.9),
             ("are you claude", r"\bare\s+you\s+claude", "model_specific", 0.9),
-            ("which model", r"\bwhich\s+(?:ai\s+)?model\b", "model_specific", 0.85),
-            ("what can you do", r"\bwhat\s+can\s+you\s+do\b", "capability", 0.7),
-            ("your capabilities", r"\byour\s+capabilities\b", "capability", 0.75),
-            ("verify yourself", r"\bverify\s+yourself\b", "verification", 0.95),
-            ("prove you are", r"\bprove\s+(?:you(?:'re|'re|\s+are)|that)\b", "verification", 0.9),
+            (
+                "which model",
+                r"\bwhich\s+(?:ai\s+)?model\b",
+                "model_specific",
+                0.85,
+            ),
+            (
+                "what can you do",
+                r"\bwhat\s+can\s+you\s+do\b",
+                "capability",
+                0.7,
+            ),
+            (
+                "your capabilities",
+                r"\byour\s+capabilities\b",
+                "capability",
+                0.75,
+            ),
+            (
+                "verify yourself",
+                r"\bverify\s+yourself\b",
+                "verification",
+                0.95,
+            ),
+            (
+                "prove you are",
+                r"\bprove\s+(?:you(?:'re|'re|\s+are)|that)\b",
+                "verification",
+                0.9,
+            ),
         ]
         return [
             IdentityPattern(p[0], re.compile(p[1], re.IGNORECASE), p[2], p[3])
