@@ -160,7 +160,7 @@ class IdentityQuestionDetector:
         patterns = []
         for category, pats in PATTERN_CATEGORIES.items():
             for p in pats:
-                regex = re.compile(re.escape(p), re.IGNORECASE)
+                regex = re.compile(p, re.IGNORECASE)
                 confidence = 0.9 if category == "direct_identity" else 0.85
                 patterns.append((p, regex, category, confidence))
 
@@ -169,7 +169,5 @@ class IdentityQuestionDetector:
     def _load_multilingual_patterns(self) -> Dict[str, List[re.Pattern]]:
         compiled: Dict[str, List[re.Pattern]] = {}
         for lang, pats in MULTILINGUAL_PATTERNS.items():
-            compiled[lang] = [
-                re.compile(re.escape(p), re.IGNORECASE) for p in pats  # noqa: E501
-            ]
+            compiled[lang] = [re.compile(p, re.IGNORECASE) for p in pats]  # noqa: E501
         return compiled

@@ -29,6 +29,7 @@ class ModelSignatureClient:
         base_url: str = DEFAULT_BASE_URL,
         timeout: int = DEFAULT_TIMEOUT,
         max_retries: int = 3,
+        debug: bool = False,
     ):
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
@@ -39,6 +40,11 @@ class ModelSignatureClient:
         self._verification_cache: Dict[tuple, VerificationResponse] = {}
         if api_key:
             self._session.headers["X-API-Key"] = api_key
+        if debug:
+            logging.basicConfig(
+                level=logging.DEBUG,
+                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            )
 
     def create_verification(
         self,
@@ -125,7 +131,7 @@ class ModelSignatureClient:
         backoff = [1, 2, 4]
         for attempt in range(self.max_retries):
             req_id = str(uuid.uuid4())
-            headers = kwargs.pop("headers", {})
+            headers = dict(kwargs.get("headers", {}))
             headers.setdefault("User-Agent", "modelsignature-python/0.1.0")
             headers["X-Request-ID"] = req_id
 
