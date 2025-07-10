@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass
 
 
@@ -16,7 +16,7 @@ class IdentityPattern:
 class IdentityQuestionDetector:
     """Detects if user input is asking about AI identity."""
 
-    def __init__(self, custom_patterns: List[str] | None = None):
+    def __init__(self, custom_patterns: Optional[List[str]] = None):
         self.patterns = self._load_default_patterns()
         if custom_patterns:
             self.add_patterns(custom_patterns)

@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class ModelSignatureError(Exception):
     """Base exception for ModelSignature SDK."""
 
@@ -19,7 +22,7 @@ class ValidationError(ModelSignatureError):
 class RateLimitError(ModelSignatureError):
     """Raised when rate limit is exceeded."""
 
-    def __init__(self, message: str, retry_after: int | None = None):
+    def __init__(self, message: str, retry_after: Optional[int] = None):
         super().__init__(message)
         self.retry_after = retry_after
 
