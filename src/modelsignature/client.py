@@ -149,7 +149,12 @@ class ModelSignatureClient:
 
             duration = int((time.time() - start) * 1000)
             logging.debug(
-                "[%s] %s %s -> %s (%dms)", req_id, method, endpoint, resp.status_code, duration
+                "[%s] %s %s -> %s (%dms)",
+                req_id,
+                method,
+                endpoint,
+                resp.status_code,
+                duration,
             )
             if duration > 1000:
                 logging.warning("Slow request %s took %dms", req_id, duration)
@@ -168,7 +173,10 @@ class ModelSignatureClient:
                 try:
                     err_json = resp.json()
                     if isinstance(err_json, dict):
-                        errors = err_json.get("errors") or err_json.get("detail")
+                        errors = (
+                            err_json.get("errors")
+                            or err_json.get("detail")
+                        )
                         if isinstance(errors, list):
                             detail = "; ".join(
                                 e.get("msg", str(e)) for e in errors
@@ -209,7 +217,9 @@ class ModelSignatureClient:
                 except ValueError:
                     detail = resp.text
                 if attempt >= self.max_retries - 1:
-                    raise NetworkError(f"Server error {resp.status_code}: {detail}")
+                    raise NetworkError(
+                        f"Server error {resp.status_code}: {detail}"
+                    )
                 delay = backoff[min(attempt, len(backoff) - 1)]
                 delay *= 0.5 + random.random()
                 time.sleep(delay)
