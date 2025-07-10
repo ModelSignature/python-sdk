@@ -150,8 +150,5 @@ class IdentityQuestionDetector:
     def _load_multilingual_patterns(self) -> Dict[str, List[re.Pattern]]:
         compiled: Dict[str, List[re.Pattern]] = {}
         for lang, pats in MULTILINGUAL_PATTERNS.items():
-            compiled[lang] = [
-                re.compile(re.escape(p), re.IGNORECASE)
-                for p in pats
-            ]
+            compiled[lang] = [re.compile(re.escape(p), re.IGNORECASE) for p in pats]
         return compiled

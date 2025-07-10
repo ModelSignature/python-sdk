@@ -11,7 +11,7 @@ This example shows:
 import os
 from modelsignature import ModelSignatureClient, IdentityQuestionDetector
 
-API_KEY = os.getenv('MODELSIGNATURE_API_KEY')
+API_KEY = os.getenv("MODELSIGNATURE_API_KEY")
 if not API_KEY:
     print("Please set MODELSIGNATURE_API_KEY environment variable")
     raise SystemExit(1)
@@ -31,8 +31,7 @@ for query in queries:
     if detector.is_identity_question(query):
         try:
             verification = client.create_verification(
-                model_id='example_model_id',
-                user_fingerprint=f'session_{hash(query)}'
+                model_id="example_model_id", user_fingerprint=f"session_{hash(query)}"
             )
             print(
                 "AI: I am GPT-4. You can verify this at: "
