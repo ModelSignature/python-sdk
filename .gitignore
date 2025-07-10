@@ -4,3 +4,8 @@ __pycache__/
 *.egg-info/
 venv/
 .env
+dist/
+build/
+.coverage
+htmlcov/
+.pytest_cache/
