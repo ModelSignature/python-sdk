@@ -2,6 +2,7 @@ import re
 from typing import List, Optional, Dict
 from difflib import SequenceMatcher
 from dataclasses import dataclass
+from functools import lru_cache
 
 
 @dataclass
@@ -17,6 +18,7 @@ class IdentityPattern:
 PATTERN_CATEGORIES: Dict[str, List[str]] = {
     "direct_identity": [
         "who are you",
+        "who you are",
         "what are you",
         "what's your name",
         "what is your name",
@@ -49,6 +51,7 @@ MULTILINGUAL_PATTERNS: Dict[str, List[str]] = {
     "french": ["qui êtes-vous", "qu'est-ce que vous êtes"],
     "spanish": ["quién eres", "qué eres"],
     "german": ["wer bist du", "was bist du"],
+    "russian": ["кто ты"],
 }
 
 
@@ -106,14 +109,26 @@ class IdentityQuestionDetector:
 
     def _normalize_text(self, text: str) -> str:
         text = text.lower()
-        text = re.sub(r"[?!.,]", "", text)
+        text = re.sub(r"[^\w\s]", " ", text)
+        contractions = {
+            "what's": "what is",
+            "who's": "who is",
+            "you're": "you are",
+            "i'm": "i am",
+            "can't": "cannot",
+            "it's": "it is",
+        }
+        for c, repl in contractions.items():
+            text = text.replace(c, repl)
         replacements = {
             r"\bu\b": "you",
             r"\br\b": "are",
+            r"\bya\b": "you",
             r"wat": "what",
         }
         for pattern, repl in replacements.items():
             text = re.sub(pattern, repl, text)
+        text = re.sub(r"\s+", " ", text).strip()
         return text
 
     def _normalized_pattern_match(self, text: str) -> bool:
@@ -131,9 +146,13 @@ class IdentityQuestionDetector:
         patterns = [p.pattern for p in self.patterns]
         for lang_pats in self.multilingual.values():
             patterns.extend([rp.pattern for rp in lang_pats])
+
+        @lru_cache(maxsize=256)
+        def _ratio(a: str, b: str) -> float:
+            return SequenceMatcher(None, a, b).ratio()
+
         for pat in patterns:
-            ratio = SequenceMatcher(None, cmp, pat).ratio()
-            if ratio >= threshold:
+            if _ratio(cmp, pat) >= threshold:
                 return True
         return False
 

@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any
 import logging
 import time
 import uuid
+import random
 import re
 import requests  # type: ignore[import]
 from urllib.parse import urljoin
@@ -128,6 +129,7 @@ class ModelSignatureClient:
             headers.setdefault("User-Agent", "modelsignature-python/0.1.0")
             headers["X-Request-ID"] = req_id
 
+            start = time.time()
             try:
                 resp = self._session.request(
                     method,
@@ -140,28 +142,41 @@ class ModelSignatureClient:
                 logging.debug("Request %s failed: %s", req_id, exc)
                 if attempt >= self.max_retries - 1:
                     raise NetworkError(str(exc))
-                time.sleep(backoff[min(attempt, len(backoff) - 1)])
+                delay = backoff[min(attempt, len(backoff) - 1)]
+                delay *= 0.5 + random.random()
+                time.sleep(delay)
                 continue
 
+            duration = int((time.time() - start) * 1000)
             logging.debug(
-                "Request %s %s %s -> %s", req_id, method, url, resp.status_code
+                "[%s] %s %s -> %s (%dms)", req_id, method, endpoint, resp.status_code, duration
             )
+            if duration > 1000:
+                logging.warning("Slow request %s took %dms", req_id, duration)
 
-            if resp.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid API key. Get one at modelsignature.com"
-                )
-            if resp.status_code == 403:
-                raise AuthenticationError(
-                    "API key lacks permission for this operation"  # noqa: E501
-                )
+            if resp.status_code in {401, 403}:
+                try:
+                    detail = resp.json().get("detail", resp.text)
+                except ValueError:
+                    detail = resp.text
+                raise AuthenticationError(detail)
             if resp.status_code == 404:
                 raise ValidationError(
                     "Model ID not found. Register at modelsignature.com"
                 )
             if resp.status_code == 422:
                 try:
-                    detail = resp.json().get("detail", resp.text)
+                    err_json = resp.json()
+                    if isinstance(err_json, dict):
+                        errors = err_json.get("errors") or err_json.get("detail")
+                        if isinstance(errors, list):
+                            detail = "; ".join(
+                                e.get("msg", str(e)) for e in errors
+                            )
+                        else:
+                            detail = str(errors)
+                    else:
+                        detail = str(err_json)
                 except ValueError:
                     detail = resp.text
                 raise ValidationError(f"Invalid parameters: {detail}")
@@ -175,23 +190,29 @@ class ModelSignatureClient:
                         ),
                         retry_after,
                     )
-                time.sleep(backoff[min(attempt, len(backoff) - 1)])
+                time.sleep(retry_after)
                 continue
 
             if resp.status_code in {502, 503, 504}:
                 if attempt >= self.max_retries - 1:
                     raise NetworkError(
-                        "ModelSignature API is temporarily unavailable"  # noqa: E501
+                        "ModelSignature API is temporarily unavailable"
                     )
-                time.sleep(backoff[min(attempt, len(backoff) - 1)])
+                delay = backoff[min(attempt, len(backoff) - 1)]
+                delay *= 0.5 + random.random()
+                time.sleep(delay)
                 continue
 
             if resp.status_code >= 500:
+                try:
+                    detail = resp.json().get("detail", resp.text)
+                except ValueError:
+                    detail = resp.text
                 if attempt >= self.max_retries - 1:
-                    raise NetworkError(
-                        "ModelSignature API is temporarily unavailable"  # noqa: E501
-                    )
-                time.sleep(backoff[min(attempt, len(backoff) - 1)])
+                    raise NetworkError(f"Server error {resp.status_code}: {detail}")
+                delay = backoff[min(attempt, len(backoff) - 1)]
+                delay *= 0.5 + random.random()
+                time.sleep(delay)
                 continue
 
             if 200 <= resp.status_code < 300:
