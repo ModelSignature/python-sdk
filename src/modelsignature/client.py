@@ -56,7 +56,10 @@ class ModelSignatureClient:
         if cached and not cached.is_expired:
             return cached
 
-        data = {"model_id": model_id, "user_fingerprint": user_fingerprint}
+        data: Dict[str, Any] = {
+            "model_id": model_id,
+            "user_fingerprint": user_fingerprint,
+        }
         if metadata:
             data["metadata"] = metadata
 
