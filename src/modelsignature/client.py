@@ -173,14 +173,18 @@ class ModelSignatureClient:
                 try:
                     err_json = resp.json()
                     if isinstance(err_json, dict):
+                        # fmt: off
                         errors = (
                             err_json.get("errors")
                             or err_json.get("detail")
                         )
+                        # fmt: on
                         if isinstance(errors, list):
+                            # fmt: off
                             detail = "; ".join(
                                 e.get("msg", str(e)) for e in errors
                             )
+                            # fmt: on
                         else:
                             detail = str(errors)
                     else:
@@ -203,9 +207,11 @@ class ModelSignatureClient:
 
             if resp.status_code in {502, 503, 504}:
                 if attempt >= self.max_retries - 1:
+                    # fmt: off
                     raise NetworkError(
                         "ModelSignature API is temporarily unavailable"
                     )
+                    # fmt: on
                 delay = backoff[min(attempt, len(backoff) - 1)]
                 delay *= 0.5 + random.random()
                 time.sleep(delay)
@@ -217,9 +223,11 @@ class ModelSignatureClient:
                 except ValueError:
                     detail = resp.text
                 if attempt >= self.max_retries - 1:
+                    # fmt: off
                     raise NetworkError(
                         f"Server error {resp.status_code}: {detail}"
                     )
+                    # fmt: on
                 delay = backoff[min(attempt, len(backoff) - 1)]
                 delay *= 0.5 + random.random()
                 time.sleep(delay)
