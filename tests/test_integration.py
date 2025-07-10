@@ -26,7 +26,9 @@ class TestRealAPI:
             model_id="test_model_123",
             user_fingerprint="test_session_456",
         )
-        assert result.verification_url.startswith("https://modelsignature.com/v/")
+        assert result.verification_url.startswith(
+            "https://modelsignature.com/v/"  # noqa: E501
+        )
         assert result.token
         assert result.expires_in > 0
 
