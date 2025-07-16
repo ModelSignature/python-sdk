@@ -97,6 +97,52 @@ class ModelSignatureClient:
             provider_id=str(resp.get("provider_id", "")),
             api_key=str(resp.get("api_key", "")),
             message=resp.get("message", ""),
+            pythontrust_center_url=resp.get("pythontrust_center_url"),
+            github_url=resp.get("github_url"),
+            linkedin_url=resp.get("linkedin_url"),
+            raw_response=resp,
+        )
+
+    def update_provider(
+        self,
+        provider_id: str,
+        company_name: Optional[str] = None,
+        email: Optional[str] = None,
+        website: Optional[str] = None,
+        pythontrust_center_url: Optional[str] = None,
+        github_url: Optional[str] = None,
+        linkedin_url: Optional[str] = None,
+        **kwargs: Any,
+    ) -> ProviderResponse:
+        """Update provider details."""
+
+        data: Dict[str, Any] = {}
+        if company_name is not None:
+            data["company_name"] = company_name
+        if email is not None:
+            data["email"] = email
+        if website is not None:
+            data["website"] = website
+        if pythontrust_center_url is not None:
+            data["pythontrust_center_url"] = pythontrust_center_url
+        if github_url is not None:
+            data["github_url"] = github_url
+        if linkedin_url is not None:
+            data["linkedin_url"] = linkedin_url
+        data.update(kwargs)
+
+        resp = self._request(
+            "PATCH",
+            f"/api/v1/providers/{provider_id}",
+            json=data,
+        )
+        return ProviderResponse(
+            provider_id=str(resp.get("provider_id", provider_id)),
+            api_key=str(resp.get("api_key", "")),
+            message=resp.get("message", ""),
+            pythontrust_center_url=resp.get("pythontrust_center_url"),
+            github_url=resp.get("github_url"),
+            linkedin_url=resp.get("linkedin_url"),
             raw_response=resp,
         )
 

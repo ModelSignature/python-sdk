@@ -51,6 +51,19 @@ provider = client.register_provider(
 )
 ```
 
+### update_provider
+
+Update provider details. All parameters are optional.
+
+```python
+provider = client.update_provider(
+    "prov_123",
+    pythontrust_center_url="https://acme.ai/trust",
+    github_url="https://github.com/acme",
+    linkedin_url="https://linkedin.com/company/acme",
+)
+```
+
 ### register_model
 
 Register a new model so that verifications can be issued for it.
