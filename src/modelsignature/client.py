@@ -178,7 +178,10 @@ class ModelSignatureClient:
 
     def sync_huggingface_model(self, model_id: str) -> Dict[str, Any]:
         """Sync model information from HuggingFace"""
-        return self._request("POST", f"/api/v1/models/{model_id}/sync-huggingface")
+        return self._request(
+            "POST",
+            f"/api/v1/models/{model_id}/sync-huggingface",
+        )
 
     def get_model_health(self, model_id: str) -> Dict[str, Any]:
         """Get model health status"""
