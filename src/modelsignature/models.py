@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 
 
@@ -32,6 +32,9 @@ class ProviderResponse:
     api_key: str
     message: str
     raw_response: Dict[str, Any]
+    pythontrust_center_url: Optional[str] = None
+    github_url: Optional[str] = None
+    linkedin_url: Optional[str] = None
 
 
 @dataclass

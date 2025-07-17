@@ -66,6 +66,7 @@ Main methods:
 - `create_verification(model_id, user_fingerprint, metadata=None)`
 - `verify_token(token)`
 - `register_provider(company_name, email, website)`
+- `update_provider(provider_id, **fields)`
 - `register_model(model_name, version, description, api_endpoint, model_type)`
 
 See [API Reference](docs/api_reference.md) for full details.

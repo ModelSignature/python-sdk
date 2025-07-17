@@ -30,3 +30,24 @@ class TestModelSignatureClient:
             ) as mr:  # noqa: E501
                 mr.side_effect = AuthenticationError("Invalid API key")
                 client.create_verification("model", "user")
+
+    @patch("modelsignature.client.ModelSignatureClient._request")
+    def test_update_provider(self, mock_request):
+        mock_request.return_value = {
+            "provider_id": "prov_123",
+            "message": "updated",
+            "pythontrust_center_url": "https://acme.ai/trust",
+            "github_url": "https://github.com/acme",
+            "linkedin_url": "https://linkedin.com/company/acme",
+        }
+        client = ModelSignatureClient(api_key="key")
+        resp = client.update_provider(
+            "prov_123",
+            pythontrust_center_url="https://acme.ai/trust",
+            github_url="https://github.com/acme",
+            linkedin_url="https://linkedin.com/company/acme",
+        )
+        assert resp.provider_id == "prov_123"
+        assert resp.pythontrust_center_url == "https://acme.ai/trust"
+        assert resp.github_url == "https://github.com/acme"
+        assert resp.linkedin_url == "https://linkedin.com/company/acme"
