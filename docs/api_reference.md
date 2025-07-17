@@ -75,7 +75,25 @@ model = client.register_model(
     description="Our custom GPT model",
     api_endpoint="https://api.acme.ai/chat",
     model_type="chat",
+    huggingface_model_id="acme/awesome-model",  # optional
+    enable_health_monitoring=True,
 )
+```
+
+### sync_huggingface_model
+
+Pull the latest metadata for a model from HuggingFace.
+
+```python
+client.sync_huggingface_model(model.model_id)
+```
+
+### get_model_health
+
+Retrieve the current health status for a model.
+
+```python
+health = client.get_model_health(model.model_id)
 ```
 
 ## IdentityQuestionDetector

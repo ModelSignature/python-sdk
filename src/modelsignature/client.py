@@ -153,6 +153,8 @@ class ModelSignatureClient:
         description: str,
         api_endpoint: str,
         model_type: str,
+        huggingface_model_id: Optional[str] = None,
+        enable_health_monitoring: bool = False,
         **kwargs,
     ) -> ModelResponse:
         data = {
@@ -161,6 +163,8 @@ class ModelSignatureClient:
             "description": description,
             "api_endpoint": api_endpoint,
             "model_type": model_type,
+            "huggingface_model_id": huggingface_model_id,
+            "enable_health_monitoring": enable_health_monitoring,
         }
         data.update(kwargs)
         resp = self._request("POST", "/api/v1/models/register", json=data)
@@ -171,6 +175,14 @@ class ModelSignatureClient:
             message=resp.get("message", ""),
             raw_response=resp,
         )
+
+    def sync_huggingface_model(self, model_id: str) -> Dict[str, Any]:
+        """Sync model information from HuggingFace"""
+        return self._request("POST", f"/api/v1/models/{model_id}/sync-huggingface")
+
+    def get_model_health(self, model_id: str) -> Dict[str, Any]:
+        """Get model health status"""
+        return self._request("GET", f"/api/v1/models/{model_id}/health")
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         url = urljoin(self.base_url + "/", endpoint.lstrip("/"))
