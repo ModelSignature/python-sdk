@@ -67,7 +67,9 @@ Main methods:
 - `verify_token(token)`
 - `register_provider(company_name, email, website)`
 - `update_provider(provider_id, **fields)`
-- `register_model(model_name, version, description, api_endpoint, model_type)`
+- `register_model(model_name, version, description, api_endpoint, model_type, huggingface_model_id=None, enable_health_monitoring=False)`
+- `sync_huggingface_model(model_id)`
+- `get_model_health(model_id)`
 
 See [API Reference](docs/api_reference.md) for full details.
 
