@@ -101,6 +101,4 @@ class TestModelSignatureClient:
         client = ModelSignatureClient(api_key="key")
         resp = client.get_model_health("mod_123")
         assert resp["healthy"] is True
-        mock_request.assert_called_with(
-            "GET", "/api/v1/models/mod_123/health"
-        )
+        mock_request.assert_called_with("GET", "/api/v1/models/mod_123/health")
