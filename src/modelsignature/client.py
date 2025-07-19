@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import logging
 import time
 import uuid
@@ -186,6 +186,100 @@ class ModelSignatureClient:
     def get_model_health(self, model_id: str) -> Dict[str, Any]:
         """Get model health status"""
         return self._request("GET", f"/api/v1/models/{model_id}/health")
+
+    def report_incident(
+        self,
+        model_id: str,
+        category: str,
+        title: str,
+        description: str,
+        verification_token: Optional[str] = None,
+        severity: str = "medium",
+        reporter_email: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Report an incident for a model."""
+
+        data: Dict[str, Any] = {
+            "model_id": model_id,
+            "category": category,
+            "title": title,
+            "description": description,
+            "severity": severity,
+        }
+
+        if verification_token:
+            data["verification_token"] = verification_token
+        if reporter_email:
+            data["reporter_email"] = reporter_email
+        data.update(kwargs)
+
+        return self._request("POST", "/api/v1/incidents/report", json=data)
+
+    def get_my_incidents(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get incidents reported for your models (provider only)."""
+
+        params = {"status": status} if status else {}
+        resp = self._request(
+            "GET",
+            "/api/v1/providers/me/incidents",
+            params=params,
+        )
+        return resp.get("incidents", [])
+
+    def report_harmful_content(
+        self,
+        model_id: str,
+        content_description: str,
+        verification_token: Optional[str] = None,
+        severity: str = "high",
+    ) -> Dict[str, Any]:
+        """Convenience method for reporting harmful content generation."""
+
+        return self.report_incident(
+            model_id=model_id,
+            category="harmful_content",
+            title="Generated harmful content",
+            description=content_description,
+            verification_token=verification_token,
+            severity=severity,
+        )
+
+    def report_technical_error(
+        self,
+        model_id: str,
+        error_details: str,
+        verification_token: Optional[str] = None,
+        severity: str = "medium",
+    ) -> Dict[str, Any]:
+        """Convenience method for reporting technical errors."""
+
+        return self.report_incident(
+            model_id=model_id,
+            category="technical_error",
+            title="Technical error encountered",
+            description=error_details,
+            verification_token=verification_token,
+            severity=severity,
+        )
+
+    def report_impersonation(
+        self,
+        model_id: str,
+        impersonation_details: str,
+        verification_token: Optional[str] = None,
+        severity: str = "high",
+    ) -> Dict[str, Any]:
+        """Convenience method for reporting model impersonation."""
+
+        return self.report_incident(
+            model_id=model_id,
+            category="impersonation",
+            title="Model impersonation detected",
+            description=impersonation_details,
+            verification_token=verification_token,
+            severity=severity,
+        )
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         url = urljoin(self.base_url + "/", endpoint.lstrip("/"))

@@ -102,3 +102,72 @@ class TestModelSignatureClient:
         resp = client.get_model_health("mod_123")
         assert resp["healthy"] is True
         mock_request.assert_called_with("GET", "/api/v1/models/mod_123/health")
+
+    @patch("modelsignature.client.ModelSignatureClient._request")
+    def test_report_incident_basic(self, mock_request):
+        mock_request.return_value = {"incident_id": "inc_1", "status": "reported"}
+        client = ModelSignatureClient(api_key="key")
+        resp = client.report_incident(
+            model_id="mod_123",
+            category="technical_error",
+            title="Err",
+            description="desc",
+            reporter_email="a@b.com",
+        )
+        assert resp["incident_id"] == "inc_1"
+        mock_request.assert_called_with(
+            "POST",
+            "/api/v1/incidents/report",
+            json={
+                "model_id": "mod_123",
+                "category": "technical_error",
+                "title": "Err",
+                "description": "desc",
+                "severity": "medium",
+                "reporter_email": "a@b.com",
+            },
+        )
+
+    @patch("modelsignature.client.ModelSignatureClient._request")
+    def test_get_my_incidents(self, mock_request):
+        mock_request.return_value = {"incidents": [{"id": "1"}]}
+        client = ModelSignatureClient(api_key="key")
+        incidents = client.get_my_incidents(status="reported")
+        assert incidents == [{"id": "1"}]
+        mock_request.assert_called_with(
+            "GET",
+            "/api/v1/providers/me/incidents",
+            params={"status": "reported"},
+        )
+
+    @patch("modelsignature.client.ModelSignatureClient.report_incident")
+    def test_convenience_methods(self, mock_report):
+        mock_report.return_value = {"ok": True}
+        client = ModelSignatureClient(api_key="key")
+        client.report_harmful_content("mod", "bad", verification_token="tok")
+        mock_report.assert_called_with(
+            model_id="mod",
+            category="harmful_content",
+            title="Generated harmful content",
+            description="bad",
+            verification_token="tok",
+            severity="high",
+        )
+        client.report_technical_error("mod", "oops")
+        mock_report.assert_called_with(
+            model_id="mod",
+            category="technical_error",
+            title="Technical error encountered",
+            description="oops",
+            verification_token=None,
+            severity="medium",
+        )
+        client.report_impersonation("mod", "imp")
+        mock_report.assert_called_with(
+            model_id="mod",
+            category="impersonation",
+            title="Model impersonation detected",
+            description="imp",
+            verification_token=None,
+            severity="high",
+        )
