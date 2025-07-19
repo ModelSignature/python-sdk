@@ -105,7 +105,10 @@ class TestModelSignatureClient:
 
     @patch("modelsignature.client.ModelSignatureClient._request")
     def test_report_incident_basic(self, mock_request):
-        mock_request.return_value = {"incident_id": "inc_1", "status": "reported"}
+        mock_request.return_value = {
+            "incident_id": "inc_1",
+            "status": "reported",
+        }
         client = ModelSignatureClient(api_key="key")
         resp = client.report_incident(
             model_id="mod_123",

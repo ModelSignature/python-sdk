@@ -216,7 +216,9 @@ class ModelSignatureClient:
 
         return self._request("POST", "/api/v1/incidents/report", json=data)
 
-    def get_my_incidents(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_my_incidents(
+        self, status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Get incidents reported for your models (provider only)."""
 
         params = {"status": status} if status else {}
