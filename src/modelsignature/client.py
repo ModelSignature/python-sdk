@@ -148,29 +148,54 @@ class ModelSignatureClient:
 
     def register_model(
         self,
-        model_name: str,
+        display_name: str,
+        api_model_identifier: str,
+        endpoint: str,
         version: str,
         description: str,
-        api_endpoint: str,
         model_type: str,
+        family_name: Optional[str] = None,
+        is_public: bool = True,
+        force_new_version: bool = False,
+        release_date: Optional[str] = None,
+        training_cutoff: Optional[str] = None,
+        architecture: Optional[str] = None,
+        context_window: Optional[int] = None,
+        model_size_params: Optional[str] = None,
+        capabilities: Optional[List[str]] = None,
         huggingface_model_id: Optional[str] = None,
         enable_health_monitoring: bool = False,
         **kwargs,
     ) -> ModelResponse:
+        """Register a model with metadata for verification."""
+
         data = {
-            "model_name": model_name,
+            "display_name": display_name,
+            "api_model_identifier": api_model_identifier,
+            "endpoint": endpoint,
             "version": version,
             "description": description,
-            "api_endpoint": api_endpoint,
             "model_type": model_type,
+            "family_name": family_name,
+            "is_public": is_public,
+            "force_new_version": force_new_version,
+            "release_date": release_date,
+            "training_cutoff": training_cutoff,
+            "architecture": architecture,
+            "context_window": context_window,
+            "model_size_params": model_size_params,
+            "capabilities": capabilities,
             "huggingface_model_id": huggingface_model_id,
             "enable_health_monitoring": enable_health_monitoring,
         }
+        # Remove None values so we don't send them to the API
+        data = {k: v for k, v in data.items() if v is not None}
         data.update(kwargs)
+
         resp = self._request("POST", "/api/v1/models/register", json=data)
         return ModelResponse(
             model_id=str(resp.get("model_id", "")),
-            name=resp.get("name", model_name),
+            name=resp.get("name", display_name),
             version=resp.get("version", version),
             message=resp.get("message", ""),
             raw_response=resp,
