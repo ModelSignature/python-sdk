@@ -67,9 +67,14 @@ Main methods:
 - `verify_token(token)`
 - `register_provider(company_name, email, website)`
 - `update_provider(provider_id, **fields)`
-- `register_model(model_name, version, description, api_endpoint, model_type, huggingface_model_id=None, enable_health_monitoring=False)`
+- `register_model(display_name, api_model_identifier, endpoint, version, description, model_type, **kwargs)`
 - `sync_huggingface_model(model_id)`
 - `get_model_health(model_id)`
+- `report_incident(model_id, category, title, description, **kwargs)`
+- `report_harmful_content(model_id, content_description, **kwargs)`
+- `report_technical_error(model_id, error_details, **kwargs)`
+- `report_impersonation(model_id, impersonation_details, **kwargs)`
+- `get_my_incidents(status=None)`
 
 See [API Reference](docs/api_reference.md) for full details.
 

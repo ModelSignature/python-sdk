@@ -66,17 +66,21 @@ provider = client.update_provider(
 
 ### register_model
 
-Register a new model so that verifications can be issued for it.
+Register a new model with comprehensive metadata.
 
 ```python
 model = client.register_model(
-    model_name="AcmeGPT",
-    version="1.0.0",
-    description="Our custom GPT model",
-    api_endpoint="https://api.acme.ai/chat",
-    model_type="chat",
-    huggingface_model_id="acme/awesome-model",  # optional
+    display_name="AcmeGPT v2",
+    api_model_identifier="acme-gpt-api",
+    endpoint="https://api.acme.ai/chat",
+    version="2.0.0",
+    description="Our latest GPT model",
+    model_type="language",
+    family_name="AcmeGPT",
+    huggingface_model_id="acme/gpt-v2",
     enable_health_monitoring=True,
+    capabilities=["chat", "code", "analysis"],
+    context_window=128000
 )
 ```
 
@@ -94,6 +98,62 @@ Retrieve the current health status for a model.
 
 ```python
 health = client.get_model_health(model.model_id)
+```
+
+### report_incident
+
+Report an incident manually.
+
+```python
+client.report_incident(
+    model_id="mod_123",
+    category="technical_error",
+    title="Timeouts observed",
+    description="The model API timed out for 5% of requests",
+    severity="medium",
+)
+```
+
+### report_harmful_content
+
+Convenience method for reporting harmful content generation.
+
+```python
+client.report_harmful_content(
+    model_id="mod_123",
+    content_description="Model produced violent threats",
+    severity="high",
+)
+```
+
+### report_technical_error
+
+Convenience method for reporting technical issues.
+
+```python
+client.report_technical_error(
+    model_id="mod_123",
+    error_details="Endpoint returned 500 errors",
+)
+```
+
+### report_impersonation
+
+Convenience method for reporting model impersonation.
+
+```python
+client.report_impersonation(
+    model_id="mod_123",
+    impersonation_details="Responses claim to be from another model",
+)
+```
+
+### get_my_incidents
+
+Retrieve incidents reported for your provider account.
+
+```python
+incidents = client.get_my_incidents(status="reported")
 ```
 
 ## IdentityQuestionDetector

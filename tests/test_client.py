@@ -61,11 +61,12 @@ class TestModelSignatureClient:
         }
         client = ModelSignatureClient(api_key="key")
         resp = client.register_model(
-            "AcmeGPT",
-            "1.0.0",
-            "desc",
-            "https://api.acme.ai/chat",
-            "chat",
+            display_name="AcmeGPT",
+            api_model_identifier="acme-gpt",
+            endpoint="https://api.acme.ai/chat",
+            version="1.0.0",
+            description="desc",
+            model_type="chat",
             huggingface_model_id="acme/awesome-model",
             enable_health_monitoring=True,
         )
@@ -75,11 +76,14 @@ class TestModelSignatureClient:
             "POST",
             "/api/v1/models/register",
             json={
-                "model_name": "AcmeGPT",
+                "display_name": "AcmeGPT",
+                "api_model_identifier": "acme-gpt",
+                "endpoint": "https://api.acme.ai/chat",
                 "version": "1.0.0",
                 "description": "desc",
-                "api_endpoint": "https://api.acme.ai/chat",
                 "model_type": "chat",
+                "is_public": True,
+                "force_new_version": False,
                 "huggingface_model_id": "acme/awesome-model",
                 "enable_health_monitoring": True,
             },
