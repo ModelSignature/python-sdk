@@ -24,7 +24,9 @@ class AuthenticationError(ModelSignatureError):
 class ValidationError(ModelSignatureError):
     """Raised when request parameters are invalid."""
 
-    def __init__(self, message: str, errors: Optional[Dict[str, Any]] = None, **kwargs):
+    def __init__(
+        self, message: str, errors: Optional[Dict[str, Any]] = None, **kwargs
+    ):
         super().__init__(message, **kwargs)
         self.errors = errors or {}
 
@@ -32,7 +34,9 @@ class ValidationError(ModelSignatureError):
 class RateLimitError(ModelSignatureError):
     """Raised when rate limit is exceeded."""
 
-    def __init__(self, message: str, retry_after: Optional[int] = None, **kwargs):
+    def __init__(
+        self, message: str, retry_after: Optional[int] = None, **kwargs
+    ):
         super().__init__(message, **kwargs)
         self.retry_after = retry_after
 
@@ -47,7 +51,10 @@ class ConflictError(ModelSignatureError):
     """Raised when a resource conflict occurs (409 status)."""
 
     def __init__(
-        self, message: str, existing_resource: Optional[Dict[str, Any]] = None, **kwargs
+        self,
+        message: str,
+        existing_resource: Optional[Dict[str, Any]] = None,
+        **kwargs,
     ):
         super().__init__(message, **kwargs)
         self.existing_resource = existing_resource or {}

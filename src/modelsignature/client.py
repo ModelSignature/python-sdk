@@ -520,7 +520,9 @@ class ModelSignatureClient:
         """Create a new API key for the authenticated provider."""
 
         data = {"name": name}
-        resp = self._request("POST", "/api/v1/providers/me/api-keys", json=data)
+        resp = self._request(
+            "POST", "/api/v1/providers/me/api-keys", json=data
+        )
 
         return ApiKeyCreateResponse(
             id=resp["id"],
