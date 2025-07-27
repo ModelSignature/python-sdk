@@ -254,7 +254,9 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_conflict(self):
         """Test ConflictError handling."""
-        with patch(\n            "modelsignature.client.requests.Session.request"\n        ) as mock_req:
+        with patch(
+            "modelsignature.client.requests.Session.request"
+        ) as mock_req:
             mock_response = MagicMock()
             mock_response.status_code = 409
             mock_response.json.return_value = {
@@ -285,7 +287,9 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_validation(self):
         """Test ValidationError handling."""
-        with patch(\n            "modelsignature.client.requests.Session.request"\n        ) as mock_req:
+        with patch(
+            "modelsignature.client.requests.Session.request"
+        ) as mock_req:
             mock_response = MagicMock()
             mock_response.status_code = 422
             mock_response.json.return_value = {
@@ -305,7 +309,9 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_server_error(self):
         """Test ServerError handling."""
-        with patch(\n            "modelsignature.client.requests.Session.request"\n        ) as mock_req:
+        with patch(
+            "modelsignature.client.requests.Session.request"
+        ) as mock_req:
             mock_response_1 = MagicMock()
             mock_response_1.status_code = 503
             mock_response_1.json.return_value = {
