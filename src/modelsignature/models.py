@@ -6,6 +6,7 @@ from enum import Enum
 
 class ModelCapability(str, Enum):
     """Model capabilities enum matching API schema."""
+
     TEXT_GENERATION = "text-generation"
     REASONING = "reasoning"
     CODE_GENERATION = "code-generation"
@@ -27,6 +28,7 @@ class ModelCapability(str, Enum):
 
 class InputType(str, Enum):
     """Input types enum matching API schema."""
+
     TEXT = "text"
     IMAGE = "image"
     AUDIO = "audio"
@@ -40,6 +42,7 @@ class InputType(str, Enum):
 
 class OutputType(str, Enum):
     """Output types enum matching API schema."""
+
     TEXT = "text"
     IMAGE = "image"
     AUDIO = "audio"
@@ -53,6 +56,7 @@ class OutputType(str, Enum):
 
 class TrustLevel(str, Enum):
     """Trust levels enum matching API schema."""
+
     UNVERIFIED = "unverified"
     BASIC = "basic"
     STANDARD = "standard"
@@ -62,6 +66,7 @@ class TrustLevel(str, Enum):
 
 class IncidentCategory(str, Enum):
     """Incident categories enum matching API schema."""
+
     HARMFUL_CONTENT = "harmful_content"
     TECHNICAL_ERROR = "technical_error"
     IMPERSONATION = "impersonation"
@@ -71,6 +76,7 @@ class IncidentCategory(str, Enum):
 
 class IncidentSeverity(str, Enum):
     """Incident severity enum matching API schema."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -80,6 +86,7 @@ class IncidentSeverity(str, Enum):
 @dataclass
 class HeadquartersLocation:
     """Headquarters location data."""
+
     city: Optional[str] = None
     state: Optional[str] = None
     country: Optional[str] = None

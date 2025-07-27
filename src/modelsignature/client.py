@@ -37,8 +37,8 @@ def _parse_datetime(dt_str: Optional[str]) -> Optional[datetime]:
     if not dt_str:
         return None
     # Replace 'Z' with '+00:00' for Python 3.9 compatibility
-    if dt_str.endswith('Z'):
-        dt_str = dt_str[:-1] + '+00:00'
+    if dt_str.endswith("Z"):
+        dt_str = dt_str[:-1] + "+00:00"
     return datetime.fromisoformat(dt_str)
 
 
@@ -520,9 +520,7 @@ class ModelSignatureClient:
         """Create a new API key for the authenticated provider."""
 
         data = {"name": name}
-        resp = self._request(
-            "POST", "/api/v1/providers/me/api-keys", json=data
-        )
+        resp = self._request("POST", "/api/v1/providers/me/api-keys", json=data)
 
         return ApiKeyCreateResponse(
             id=resp["id"],

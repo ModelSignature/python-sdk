@@ -84,9 +84,7 @@ class TestEnhancedModelSignatureClient:
         mock_request.return_value = {"message": "Profile updated"}
 
         hq = HeadquartersLocation(
-            city="San Francisco",
-            state="California",
-            country="United States"
+            city="San Francisco", state="California", country="United States"
         )
 
         response = self.client.update_provider_profile(
@@ -124,21 +122,18 @@ class TestEnhancedModelSignatureClient:
 
         call_args = mock_request.call_args
         json_data = call_args[1]["json"]
-        assert json_data["compliance_certifications"] == [
-            "SOC2", "ISO27001", "GDPR"
-        ]
+        assert json_data["compliance_certifications"] == ["SOC2", "ISO27001", "GDPR"]
 
     @patch("modelsignature.client.ModelSignatureClient._request")
     def test_archive_model(self, mock_request):
         """Test model archiving."""
         mock_request.return_value = {
             "message": "Model archived successfully",
-            "archived_versions": 2
+            "archived_versions": 2,
         }
 
         response = self.client.archive_model(
-            model_id="model_123",
-            reason="Deprecated in favor of v2"
+            model_id="model_123", reason="Deprecated in favor of v2"
         )
 
         assert response["message"] == "Model archived successfully"
@@ -254,9 +249,7 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_conflict(self):
         """Test ConflictError handling."""
-        with patch(
-            "modelsignature.client.requests.Session.request"
-        ) as mock_req:
+        with patch("modelsignature.client.requests.Session.request") as mock_req:
             mock_response = MagicMock()
             mock_response.status_code = 409
             mock_response.json.return_value = {
@@ -266,7 +259,7 @@ class TestEnhancedModelSignatureClient:
                     "id": "model_123",
                     "version": 1,
                     "display_name": "Existing Model",
-                }
+                },
             }
             mock_response.text = '{"error": "model_exists"}'
             mock_req.return_value = mock_response
@@ -287,9 +280,7 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_validation(self):
         """Test ValidationError handling."""
-        with patch(
-            "modelsignature.client.requests.Session.request"
-        ) as mock_req:
+        with patch("modelsignature.client.requests.Session.request") as mock_req:
             mock_response = MagicMock()
             mock_response.status_code = 422
             mock_response.json.return_value = {
@@ -309,32 +300,24 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_server_error(self):
         """Test ServerError handling."""
-        with patch(
-            "modelsignature.client.requests.Session.request"
-        ) as mock_req:
+        with patch("modelsignature.client.requests.Session.request") as mock_req:
             mock_response_1 = MagicMock()
             mock_response_1.status_code = 503
             mock_response_1.json.return_value = {
                 "detail": "Service temporarily unavailable"
             }
-            mock_response_1.text = (
-                '{"detail": "Service temporarily unavailable"}'
-            )
+            mock_response_1.text = '{"detail": "Service temporarily unavailable"}'
 
             mock_response_2 = MagicMock()
             mock_response_2.status_code = 503
             mock_response_2.json.return_value = {
                 "detail": "Service temporarily unavailable"
             }
-            mock_response_2.text = (
-                '{"detail": "Service temporarily unavailable"}'
-            )
+            mock_response_2.text = '{"detail": "Service temporarily unavailable"}'
 
             mock_response_3 = MagicMock()
             mock_response_3.status_code = 500
-            mock_response_3.json.return_value = {
-                "detail": "Internal server error"
-            }
+            mock_response_3.json.return_value = {"detail": "Internal server error"}
             mock_response_3.text = '{"detail": "Internal server error"}'
 
             # Mock multiple attempts due to retries
@@ -375,10 +358,7 @@ class TestEnhancedModelSignatureClient:
     @patch("modelsignature.client.ModelSignatureClient._request")
     def test_incident_reporting_with_enums(self, mock_request):
         """Test incident reporting using enum values."""
-        mock_request.return_value = {
-            "status": "success",
-            "incident_id": "inc_123"
-        }
+        mock_request.return_value = {"status": "success", "incident_id": "inc_123"}
 
         response = self.client.report_incident(
             model_id="model_123",
