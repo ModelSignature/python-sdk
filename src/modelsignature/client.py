@@ -32,6 +32,16 @@ from .models import (
 from .constants import DEFAULT_BASE_URL, DEFAULT_TIMEOUT
 
 
+def _parse_datetime(dt_str: Optional[str]) -> Optional[datetime]:
+    """Parse datetime string, handling 'Z' suffix for UTC."""
+    if not dt_str:
+        return None
+    # Replace 'Z' with '+00:00' for Python 3.9 compatibility
+    if dt_str.endswith('Z'):
+        dt_str = dt_str[:-1] + '+00:00'
+    return datetime.fromisoformat(dt_str)
+
+
 class ModelSignatureClient:
     """ModelSignature API client for Python."""
 
@@ -499,17 +509,9 @@ class ModelSignatureClient:
                 id=key["id"],
                 name=key["name"],
                 key_prefix=key["key_prefix"],
-                last_used_at=(
-                    datetime.fromisoformat(key["last_used_at"])
-                    if key.get("last_used_at")
-                    else None
-                ),
+                last_used_at=_parse_datetime(key.get("last_used_at")),
                 is_active=key["is_active"],
-                created_at=(
-                    datetime.fromisoformat(key["created_at"])
-                    if key.get("created_at")
-                    else None
-                ),
+                created_at=_parse_datetime(key.get("created_at")),
             )
             for key in resp
         ]
@@ -527,7 +529,7 @@ class ModelSignatureClient:
             name=resp["name"],
             key_prefix=resp["key_prefix"],
             api_key=resp["api_key"],
-            created_at=datetime.fromisoformat(resp["created_at"]),
+            created_at=_parse_datetime(resp["created_at"]),
         )
 
     def revoke_api_key(self, key_id: str) -> Dict[str, Any]:
