@@ -81,7 +81,7 @@ addopts = [
 ]
 
 [tool.black]
-line-length = 88
+line-length = 79
 target-version = ["py38", "py39", "py310", "py311", "py312"]
 include = '\.pyi?$'
 extend-exclude = '''
@@ -100,7 +100,7 @@ extend-exclude = '''
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 79
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
