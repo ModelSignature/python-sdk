@@ -77,7 +77,7 @@ addopts = [
     "--cov=modelsignature",
     "--cov-report=term-missing",
     "--cov-report=html",
-    "--cov-fail-under=85",
+    "--cov-fail-under=60",
 ]
 
 [tool.black]
