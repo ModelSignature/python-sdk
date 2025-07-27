@@ -6,6 +6,7 @@ import time
 import uuid
 import random
 import re
+from datetime import datetime
 import requests  # type: ignore[import]
 from urllib.parse import urljoin
 
@@ -15,8 +16,22 @@ from .exceptions import (
     ValidationError,
     NetworkError,
     RateLimitError,
+    ConflictError,
+    NotFoundError,
+    PermissionError,
+    ServerError,
 )
-from .models import VerificationResponse, ModelResponse, ProviderResponse
+from .models import (
+    VerificationResponse, 
+    ModelResponse, 
+    ProviderResponse,
+    ModelCapability,
+    InputType,
+    OutputType,
+    HeadquartersLocation,
+    ApiKeyResponse,
+    ApiKeyCreateResponse,
+)
 from .constants import DEFAULT_BASE_URL, DEFAULT_TIMEOUT
 
 
@@ -36,7 +51,7 @@ class ModelSignatureClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self._session = requests.Session()
-        self._session.headers["User-Agent"] = "modelsignature-python/0.1.0"
+        self._session.headers["User-Agent"] = "modelsignature-python/0.2.0"
         self._verification_cache: Dict[tuple, VerificationResponse] = {}
         if api_key:
             self._session.headers["X-API-Key"] = api_key
@@ -97,7 +112,7 @@ class ModelSignatureClient:
             provider_id=str(resp.get("provider_id", "")),
             api_key=str(resp.get("api_key", "")),
             message=resp.get("message", ""),
-            pythontrust_center_url=resp.get("pythontrust_center_url"),
+            trust_center_url=resp.get("trust_center_url"),
             github_url=resp.get("github_url"),
             linkedin_url=resp.get("linkedin_url"),
             raw_response=resp,
@@ -109,7 +124,7 @@ class ModelSignatureClient:
         company_name: Optional[str] = None,
         email: Optional[str] = None,
         website: Optional[str] = None,
-        pythontrust_center_url: Optional[str] = None,
+        trust_center_url: Optional[str] = None,
         github_url: Optional[str] = None,
         linkedin_url: Optional[str] = None,
         **kwargs: Any,
@@ -123,8 +138,8 @@ class ModelSignatureClient:
             data["email"] = email
         if website is not None:
             data["website"] = website
-        if pythontrust_center_url is not None:
-            data["pythontrust_center_url"] = pythontrust_center_url
+        if trust_center_url is not None:
+            data["trust_center_url"] = trust_center_url
         if github_url is not None:
             data["github_url"] = github_url
         if linkedin_url is not None:
@@ -140,10 +155,88 @@ class ModelSignatureClient:
             provider_id=str(resp.get("provider_id", provider_id)),
             api_key=str(resp.get("api_key", "")),
             message=resp.get("message", ""),
-            pythontrust_center_url=resp.get("pythontrust_center_url"),
+            trust_center_url=resp.get("trust_center_url"),
             github_url=resp.get("github_url"),
             linkedin_url=resp.get("linkedin_url"),
             raw_response=resp,
+        )
+
+    def update_provider_profile(
+        self,
+        provider_id: str,
+        company_name: Optional[str] = None,
+        website: Optional[str] = None,
+        description: Optional[str] = None,
+        founded_year: Optional[int] = None,
+        headquarters_location: Optional[HeadquartersLocation] = None,
+        employee_count: Optional[str] = None,
+        phone_number: Optional[str] = None,
+        support_email: Optional[str] = None,
+        logo_url: Optional[str] = None,
+        trust_center_url: Optional[str] = None,
+        github_url: Optional[str] = None,
+        linkedin_url: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Update provider profile with complete information."""
+        
+        data: Dict[str, Any] = {}
+        if company_name is not None:
+            data["company_name"] = company_name
+        if website is not None:
+            data["website"] = website
+        if description is not None:
+            data["description"] = description
+        if founded_year is not None:
+            data["founded_year"] = founded_year
+        if headquarters_location is not None:
+            data["headquarters_location"] = {
+                "city": headquarters_location.city,
+                "state": headquarters_location.state,
+                "country": headquarters_location.country,
+            }
+        if employee_count is not None:
+            data["employee_count"] = employee_count
+        if phone_number is not None:
+            data["phone_number"] = phone_number
+        if support_email is not None:
+            data["support_email"] = support_email
+        if logo_url is not None:
+            data["logo_url"] = logo_url
+        if trust_center_url is not None:
+            data["trust_center_url"] = trust_center_url
+        if github_url is not None:
+            data["github_url"] = github_url
+        if linkedin_url is not None:
+            data["linkedin_url"] = linkedin_url
+        data.update(kwargs)
+
+        return self._request(
+            "PUT",
+            f"/api/v1/providers/{provider_id}/profile",
+            json=data,
+        )
+
+    def update_provider_compliance(
+        self,
+        provider_id: str,
+        compliance_certifications: Optional[List[str]] = None,
+        ai_specific_certifications: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Update provider compliance information."""
+        
+        data: Dict[str, Any] = {}
+        if compliance_certifications is not None:
+            data["compliance_certifications"] = compliance_certifications
+        if ai_specific_certifications is not None:
+            data["ai_specific_certifications"] = ai_specific_certifications
+        data.update(kwargs)
+
+        return self._request(
+            "PUT",
+            f"/api/v1/providers/{provider_id}/compliance",
+            json=data,
         )
 
     def register_model(
@@ -155,6 +248,7 @@ class ModelSignatureClient:
         description: str,
         model_type: str,
         family_name: Optional[str] = None,
+        model_family_id: Optional[str] = None,
         is_public: bool = True,
         force_new_version: bool = False,
         release_date: Optional[str] = None,
@@ -162,9 +256,21 @@ class ModelSignatureClient:
         architecture: Optional[str] = None,
         context_window: Optional[int] = None,
         model_size_params: Optional[str] = None,
+        model_card_url: Optional[str] = None,
         capabilities: Optional[List[str]] = None,
+        input_types: Optional[List[str]] = None,
+        output_types: Optional[List[str]] = None,
+        serving_regions: Optional[List[str]] = None,
+        uptime_sla: Optional[float] = None,
+        avg_response_time: Optional[int] = None,
+        performance_benchmarks: Optional[Dict[str, Any]] = None,
         huggingface_model_id: Optional[str] = None,
         enable_health_monitoring: bool = False,
+        security_standards: Optional[Dict[str, Any]] = None,
+        github_repo_url: Optional[str] = None,
+        huggingface_url: Optional[str] = None,
+        paper_url: Optional[str] = None,
+        tls_version: Optional[str] = None,
         **kwargs,
     ) -> ModelResponse:
         """Register a model with metadata for verification."""
@@ -177,6 +283,7 @@ class ModelSignatureClient:
             "description": description,
             "model_type": model_type,
             "family_name": family_name,
+            "model_family_id": model_family_id,
             "is_public": is_public,
             "force_new_version": force_new_version,
             "release_date": release_date,
@@ -184,9 +291,21 @@ class ModelSignatureClient:
             "architecture": architecture,
             "context_window": context_window,
             "model_size_params": model_size_params,
+            "model_card_url": model_card_url,
             "capabilities": capabilities,
+            "input_types": input_types,
+            "output_types": output_types,
+            "serving_regions": serving_regions,
+            "uptime_sla": uptime_sla,
+            "avg_response_time": avg_response_time,
+            "performance_benchmarks": performance_benchmarks,
             "huggingface_model_id": huggingface_model_id,
             "enable_health_monitoring": enable_health_monitoring,
+            "security_standards": security_standards,
+            "github_repo_url": github_repo_url,
+            "huggingface_url": huggingface_url,
+            "paper_url": paper_url,
+            "tls_version": tls_version,
         }
         # Remove None values so we don't send them to the API
         data = {k: v for k, v in data.items() if v is not None}
@@ -195,9 +314,11 @@ class ModelSignatureClient:
         resp = self._request("POST", "/api/v1/models/register", json=data)
         return ModelResponse(
             model_id=str(resp.get("model_id", "")),
-            name=resp.get("name", display_name),
+            name=resp.get("display_name", display_name),
             version=resp.get("version", version),
+            version_number=resp.get("version_number"),
             message=resp.get("message", ""),
+            can_quick_edit=resp.get("can_quick_edit"),
             raw_response=resp,
         )
 
@@ -309,13 +430,166 @@ class ModelSignatureClient:
             severity=severity,
         )
 
+    def archive_model(
+        self,
+        model_id: str,
+        reason: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Archive a model and all its versions."""
+        
+        data = {}
+        if reason is not None:
+            data["reason"] = reason
+            
+        return self._request(
+            "PUT",
+            f"/api/v1/models/{model_id}/archive",
+            json=data,
+        )
+
+    def unarchive_model(self, model_id: str) -> Dict[str, Any]:
+        """Unarchive a model."""
+        
+        return self._request(
+            "PUT",
+            f"/api/v1/models/{model_id}/unarchive",
+        )
+
+    def update_model_visibility(
+        self,
+        model_id: str,
+        is_public: bool,
+    ) -> Dict[str, Any]:
+        """Update model visibility settings."""
+        
+        data = {"is_public": is_public}
+        return self._request(
+            "PUT",
+            f"/api/v1/models/{model_id}/visibility",
+            json=data,
+        )
+
+    def get_model_history(self, model_id: str) -> Dict[str, Any]:
+        """Get version history for a model."""
+        
+        return self._request(
+            "GET",
+            f"/api/v1/models/{model_id}/history",
+        )
+
+    def get_latest_model_version(self, model_id: str) -> Dict[str, Any]:
+        """Get the latest version of a model by any version's ID."""
+        
+        return self._request(
+            "GET",
+            f"/api/v1/models/{model_id}/latest",
+        )
+
+    def get_model_community_stats(self, model_id: str) -> Dict[str, Any]:
+        """Get community statistics for a model."""
+        
+        return self._request(
+            "GET",
+            f"/api/v1/models/{model_id}/community-stats",
+        )
+
+    def list_api_keys(self) -> List[ApiKeyResponse]:
+        """List all API keys for the authenticated provider."""
+        
+        resp = self._request("GET", "/api/v1/providers/me/api-keys")
+        return [
+            ApiKeyResponse(
+                id=key["id"],
+                name=key["name"],
+                key_prefix=key["key_prefix"],
+                last_used_at=datetime.fromisoformat(key["last_used_at"]) if key.get("last_used_at") else None,
+                is_active=key["is_active"],
+                created_at=datetime.fromisoformat(key["created_at"]) if key.get("created_at") else None,
+            )
+            for key in resp
+        ]
+
+    def create_api_key(self, name: str) -> ApiKeyCreateResponse:
+        """Create a new API key for the authenticated provider."""
+        
+        data = {"name": name}
+        resp = self._request("POST", "/api/v1/providers/me/api-keys", json=data)
+        
+        return ApiKeyCreateResponse(
+            id=resp["id"],
+            name=resp["name"],
+            key_prefix=resp["key_prefix"],
+            api_key=resp["api_key"],
+            created_at=datetime.fromisoformat(resp["created_at"]),
+        )
+
+    def revoke_api_key(self, key_id: str) -> Dict[str, Any]:
+        """Revoke (deactivate) an API key."""
+        
+        return self._request(
+            "DELETE",
+            f"/api/v1/providers/me/api-keys/{key_id}",
+        )
+
+    def search(
+        self,
+        query: str,
+        limit: int = 20,
+        include_providers: bool = True,
+        include_models: bool = True,
+    ) -> Dict[str, Any]:
+        """Search across providers and models."""
+        
+        params = {
+            "q": query,
+            "limit": limit,
+            "include_providers": include_providers,
+            "include_models": include_models,
+        }
+        
+        return self._request("GET", "/api/v1/search", params=params)
+
+    def list_public_models(
+        self,
+        skip: int = 0,
+        limit: int = 1000,
+        provider_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """List all public models."""
+        
+        params = {"skip": skip, "limit": limit}
+        if provider_id:
+            params["provider_id"] = provider_id
+            
+        return self._request("GET", "/api/v1/models/public", params=params)
+
+    def list_public_providers(
+        self,
+        skip: int = 0,
+        limit: int = 1000,
+    ) -> List[Dict[str, Any]]:
+        """List all public providers."""
+        
+        params = {"skip": skip, "limit": limit}
+        return self._request("GET", "/api/v1/providers/public", params=params)
+
+    def get_public_model(self, model_id: str) -> Dict[str, Any]:
+        """Get public model information."""
+        
+        return self._request("GET", f"/api/v1/models/{model_id}/public")
+
+    def get_public_provider(self, provider_id: str) -> Dict[str, Any]:
+        """Get public provider information."""
+        
+        return self._request("GET", f"/api/v1/providers/{provider_id}/public")
+
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         url = urljoin(self.base_url + "/", endpoint.lstrip("/"))
         backoff = [1, 2, 4]
         for attempt in range(self.max_retries):
             req_id = str(uuid.uuid4())
             headers = dict(kwargs.get("headers", {}))
-            headers.setdefault("User-Agent", "modelsignature-python/0.1.0")
+            headers.setdefault("User-Agent", "modelsignature-python/0.2.0")
             headers["X-Request-ID"] = req_id
 
             start = time.time()
@@ -348,16 +622,33 @@ class ModelSignatureClient:
             if duration > 1000:
                 logging.warning("Slow request %s took %dms", req_id, duration)
 
-            if resp.status_code in {401, 403}:
+            if resp.status_code == 401:
                 try:
                     detail = resp.json().get("detail", resp.text)
                 except ValueError:
                     detail = resp.text
-                raise AuthenticationError(detail)
+                raise AuthenticationError(detail, status_code=401, response=resp.json() if resp.text else {})
+            if resp.status_code == 403:
+                try:
+                    detail = resp.json().get("detail", resp.text)
+                except ValueError:
+                    detail = resp.text
+                raise PermissionError(detail, status_code=403, response=resp.json() if resp.text else {})
             if resp.status_code == 404:
-                raise ValidationError(
-                    "Model ID not found. Register at modelsignature.com"
-                )
+                try:
+                    detail = resp.json().get("detail", resp.text)
+                except ValueError:
+                    detail = resp.text
+                raise NotFoundError(detail, status_code=404, response=resp.json() if resp.text else {})
+            if resp.status_code == 409:
+                try:
+                    resp_json = resp.json()
+                    detail = resp_json.get("message", resp.text)
+                    existing = resp_json.get("existing_model")
+                except ValueError:
+                    detail = resp.text
+                    existing = None
+                raise ConflictError(detail, existing_resource=existing, status_code=409, response=resp_json if resp.text else {})
             if resp.status_code == 422:
                 try:
                     err_json = resp.json()
@@ -380,7 +671,8 @@ class ModelSignatureClient:
                         detail = str(err_json)
                 except ValueError:
                     detail = resp.text
-                raise ValidationError(f"Invalid parameters: {detail}")
+                    err_json = {}
+                raise ValidationError(f"Invalid parameters: {detail}", errors=err_json, status_code=422, response=err_json)
 
             if resp.status_code == 429:
                 retry_after = int(resp.headers.get("Retry-After", "1"))
@@ -409,12 +701,16 @@ class ModelSignatureClient:
             if resp.status_code >= 500:
                 try:
                     detail = resp.json().get("detail", resp.text)
+                    resp_json = resp.json()
                 except ValueError:
                     detail = resp.text
+                    resp_json = {}
                 if attempt >= self.max_retries - 1:
                     # fmt: off
-                    raise NetworkError(
-                        f"Server error {resp.status_code}: {detail}"
+                    raise ServerError(
+                        f"Server error {resp.status_code}: {detail}",
+                        status_code=resp.status_code,
+                        response=resp_json
                     )
                     # fmt: on
                 delay = float(backoff[min(attempt, len(backoff) - 1)])
