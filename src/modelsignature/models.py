@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from enum import Enum
 
@@ -135,7 +135,7 @@ class ModelResponse:
 @dataclass
 class ApiKeyResponse:
     """Response from API key operations."""
-    
+
     id: str
     name: str
     key_prefix: str
@@ -144,10 +144,10 @@ class ApiKeyResponse:
     created_at: Optional[datetime] = None
 
 
-@dataclass 
+@dataclass
 class ApiKeyCreateResponse:
     """Response from creating a new API key."""
-    
+
     id: str
     name: str
     key_prefix: str
