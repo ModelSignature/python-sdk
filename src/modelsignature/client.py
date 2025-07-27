@@ -22,17 +22,24 @@ from .exceptions import (
     ServerError,
 )
 from .models import (
-    VerificationResponse, 
-    ModelResponse, 
+    VerificationResponse,
+    ModelResponse,
     ProviderResponse,
-    ModelCapability,
-    InputType,
-    OutputType,
     HeadquartersLocation,
     ApiKeyResponse,
     ApiKeyCreateResponse,
 )
 from .constants import DEFAULT_BASE_URL, DEFAULT_TIMEOUT
+
+
+def _parse_datetime(dt_str: Optional[str]) -> Optional[datetime]:
+    """Parse datetime string, handling 'Z' suffix for UTC."""
+    if not dt_str:
+        return None
+    # Replace 'Z' with '+00:00' for Python 3.9 compatibility
+    if dt_str.endswith("Z"):
+        dt_str = dt_str[:-1] + "+00:00"
+    return datetime.fromisoformat(dt_str)
 
 
 class ModelSignatureClient:
@@ -179,7 +186,7 @@ class ModelSignatureClient:
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """Update provider profile with complete information."""
-        
+
         data: Dict[str, Any] = {}
         if company_name is not None:
             data["company_name"] = company_name
@@ -225,7 +232,7 @@ class ModelSignatureClient:
         **kwargs: Any,
     ) -> Dict[str, Any]:
         """Update provider compliance information."""
-        
+
         data: Dict[str, Any] = {}
         if compliance_certifications is not None:
             data["compliance_certifications"] = compliance_certifications
@@ -436,11 +443,11 @@ class ModelSignatureClient:
         reason: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Archive a model and all its versions."""
-        
+
         data = {}
         if reason is not None:
             data["reason"] = reason
-            
+
         return self._request(
             "PUT",
             f"/api/v1/models/{model_id}/archive",
@@ -449,7 +456,7 @@ class ModelSignatureClient:
 
     def unarchive_model(self, model_id: str) -> Dict[str, Any]:
         """Unarchive a model."""
-        
+
         return self._request(
             "PUT",
             f"/api/v1/models/{model_id}/unarchive",
@@ -461,7 +468,7 @@ class ModelSignatureClient:
         is_public: bool,
     ) -> Dict[str, Any]:
         """Update model visibility settings."""
-        
+
         data = {"is_public": is_public}
         return self._request(
             "PUT",
@@ -471,7 +478,7 @@ class ModelSignatureClient:
 
     def get_model_history(self, model_id: str) -> Dict[str, Any]:
         """Get version history for a model."""
-        
+
         return self._request(
             "GET",
             f"/api/v1/models/{model_id}/history",
@@ -479,7 +486,7 @@ class ModelSignatureClient:
 
     def get_latest_model_version(self, model_id: str) -> Dict[str, Any]:
         """Get the latest version of a model by any version's ID."""
-        
+
         return self._request(
             "GET",
             f"/api/v1/models/{model_id}/latest",
@@ -487,7 +494,7 @@ class ModelSignatureClient:
 
     def get_model_community_stats(self, model_id: str) -> Dict[str, Any]:
         """Get community statistics for a model."""
-        
+
         return self._request(
             "GET",
             f"/api/v1/models/{model_id}/community-stats",
@@ -495,37 +502,43 @@ class ModelSignatureClient:
 
     def list_api_keys(self) -> List[ApiKeyResponse]:
         """List all API keys for the authenticated provider."""
-        
+
         resp = self._request("GET", "/api/v1/providers/me/api-keys")
+        keys_data = resp if isinstance(resp, list) else resp.get("keys", [])
         return [
             ApiKeyResponse(
                 id=key["id"],
                 name=key["name"],
                 key_prefix=key["key_prefix"],
-                last_used_at=datetime.fromisoformat(key["last_used_at"]) if key.get("last_used_at") else None,
+                last_used_at=_parse_datetime(key.get("last_used_at")),
                 is_active=key["is_active"],
-                created_at=datetime.fromisoformat(key["created_at"]) if key.get("created_at") else None,
+                created_at=_parse_datetime(key.get("created_at")),
             )
-            for key in resp
+            for key in keys_data
         ]
 
     def create_api_key(self, name: str) -> ApiKeyCreateResponse:
         """Create a new API key for the authenticated provider."""
-        
+
         data = {"name": name}
-        resp = self._request("POST", "/api/v1/providers/me/api-keys", json=data)
-        
+        resp = self._request(
+            "POST", "/api/v1/providers/me/api-keys", json=data
+        )
+
+        created_at = _parse_datetime(resp["created_at"])
+        if created_at is None:
+            raise ValueError("Invalid created_at timestamp")
         return ApiKeyCreateResponse(
             id=resp["id"],
             name=resp["name"],
             key_prefix=resp["key_prefix"],
             api_key=resp["api_key"],
-            created_at=datetime.fromisoformat(resp["created_at"]),
+            created_at=created_at,
         )
 
     def revoke_api_key(self, key_id: str) -> Dict[str, Any]:
         """Revoke (deactivate) an API key."""
-        
+
         return self._request(
             "DELETE",
             f"/api/v1/providers/me/api-keys/{key_id}",
@@ -539,14 +552,14 @@ class ModelSignatureClient:
         include_models: bool = True,
     ) -> Dict[str, Any]:
         """Search across providers and models."""
-        
+
         params = {
             "q": query,
             "limit": limit,
             "include_providers": include_providers,
             "include_models": include_models,
         }
-        
+
         return self._request("GET", "/api/v1/search", params=params)
 
     def list_public_models(
@@ -556,12 +569,13 @@ class ModelSignatureClient:
         provider_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """List all public models."""
-        
-        params = {"skip": skip, "limit": limit}
+
+        params: Dict[str, Any] = {"skip": skip, "limit": limit}
         if provider_id:
             params["provider_id"] = provider_id
-            
-        return self._request("GET", "/api/v1/models/public", params=params)
+
+        resp = self._request("GET", "/api/v1/models/public", params=params)
+        return resp if isinstance(resp, list) else resp.get("models", [])
 
     def list_public_providers(
         self,
@@ -569,18 +583,19 @@ class ModelSignatureClient:
         limit: int = 1000,
     ) -> List[Dict[str, Any]]:
         """List all public providers."""
-        
-        params = {"skip": skip, "limit": limit}
-        return self._request("GET", "/api/v1/providers/public", params=params)
+
+        params: Dict[str, Any] = {"skip": skip, "limit": limit}
+        resp = self._request("GET", "/api/v1/providers/public", params=params)
+        return resp if isinstance(resp, list) else resp.get("providers", [])
 
     def get_public_model(self, model_id: str) -> Dict[str, Any]:
         """Get public model information."""
-        
+
         return self._request("GET", f"/api/v1/models/{model_id}/public")
 
     def get_public_provider(self, provider_id: str) -> Dict[str, Any]:
         """Get public provider information."""
-        
+
         return self._request("GET", f"/api/v1/providers/{provider_id}/public")
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
@@ -627,19 +642,31 @@ class ModelSignatureClient:
                     detail = resp.json().get("detail", resp.text)
                 except ValueError:
                     detail = resp.text
-                raise AuthenticationError(detail, status_code=401, response=resp.json() if resp.text else {})
+                raise AuthenticationError(
+                    detail,
+                    status_code=401,
+                    response=resp.json() if resp.text else {},
+                )
             if resp.status_code == 403:
                 try:
                     detail = resp.json().get("detail", resp.text)
                 except ValueError:
                     detail = resp.text
-                raise PermissionError(detail, status_code=403, response=resp.json() if resp.text else {})
+                raise PermissionError(
+                    detail,
+                    status_code=403,
+                    response=resp.json() if resp.text else {},
+                )
             if resp.status_code == 404:
                 try:
                     detail = resp.json().get("detail", resp.text)
                 except ValueError:
                     detail = resp.text
-                raise NotFoundError(detail, status_code=404, response=resp.json() if resp.text else {})
+                raise NotFoundError(
+                    detail,
+                    status_code=404,
+                    response=resp.json() if resp.text else {},
+                )
             if resp.status_code == 409:
                 try:
                     resp_json = resp.json()
@@ -648,7 +675,12 @@ class ModelSignatureClient:
                 except ValueError:
                     detail = resp.text
                     existing = None
-                raise ConflictError(detail, existing_resource=existing, status_code=409, response=resp_json if resp.text else {})
+                raise ConflictError(
+                    detail,
+                    existing_resource=existing,
+                    status_code=409,
+                    response=resp_json if resp.text else {},
+                )
             if resp.status_code == 422:
                 try:
                     err_json = resp.json()
@@ -672,7 +704,12 @@ class ModelSignatureClient:
                 except ValueError:
                     detail = resp.text
                     err_json = {}
-                raise ValidationError(f"Invalid parameters: {detail}", errors=err_json, status_code=422, response=err_json)
+                raise ValidationError(
+                    f"Invalid parameters: {detail}",
+                    errors=err_json,
+                    status_code=422,
+                    response=err_json,
+                )
 
             if resp.status_code == 429:
                 retry_after = int(resp.headers.get("Retry-After", "1"))
