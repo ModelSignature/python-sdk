@@ -16,7 +16,6 @@ from modelsignature.exceptions import (
     AuthenticationError,
     ValidationError,
     ConflictError,
-    NotFoundError,
     PermissionError,
     ServerError,
 )
@@ -74,7 +73,7 @@ class TestEnhancedModelSignatureClient:
         call_args = mock_request.call_args
         assert call_args[0][0] == "POST"
         assert call_args[0][1] == "/api/v1/models/register"
-        
+
         json_data = call_args[1]["json"]
         assert json_data["display_name"] == "Test Model"
         assert json_data["capabilities"] == ["text-generation", "reasoning"]
@@ -104,7 +103,7 @@ class TestEnhancedModelSignatureClient:
         )
 
         assert response["message"] == "Profile updated"
-        
+
         # Verify the request structure
         call_args = mock_request.call_args
         json_data = call_args[1]["json"]
@@ -125,10 +124,12 @@ class TestEnhancedModelSignatureClient:
         )
 
         assert response["message"] == "Compliance updated"
-        
+
         call_args = mock_request.call_args
         json_data = call_args[1]["json"]
-        assert json_data["compliance_certifications"] == ["SOC2", "ISO27001", "GDPR"]
+        assert json_data["compliance_certifications"] == [
+            "SOC2", "ISO27001", "GDPR"
+        ]
 
     @patch("modelsignature.client.ModelSignatureClient._request")
     def test_archive_model(self, mock_request):
@@ -164,7 +165,7 @@ class TestEnhancedModelSignatureClient:
         keys = self.client.list_api_keys()
         assert len(keys) == 1
         assert keys[0].name == "Production Key"
-        assert keys[0].is_active == True
+        assert keys[0].is_active is True
 
         # Test create key
         mock_request.return_value = {
@@ -312,19 +313,21 @@ class TestEnhancedModelSignatureClient:
             mock_response_1.status_code = 503
             mock_response_1.json.return_value = {"detail": "Service temporarily unavailable"}
             mock_response_1.text = '{"detail": "Service temporarily unavailable"}'
-            
+
             mock_response_2 = MagicMock()
             mock_response_2.status_code = 503
             mock_response_2.json.return_value = {"detail": "Service temporarily unavailable"}
             mock_response_2.text = '{"detail": "Service temporarily unavailable"}'
-            
+
             mock_response_3 = MagicMock()
             mock_response_3.status_code = 500
             mock_response_3.json.return_value = {"detail": "Internal server error"}
             mock_response_3.text = '{"detail": "Internal server error"}'
-            
+
             # Mock multiple attempts due to retries
-            mock_req.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+            mock_req.side_effect = [
+            mock_response_1, mock_response_2, mock_response_3
+        ]
 
             with pytest.raises(ServerError) as exc_info:
                 self.client.verify_token("test_token")
@@ -337,19 +340,19 @@ class TestEnhancedModelSignatureClient:
         # Test ModelCapability enum
         assert ModelCapability.TEXT_GENERATION == "text-generation"
         assert ModelCapability.REASONING == "reasoning"
-        
+
         # Test InputType enum
         assert InputType.TEXT == "text"
         assert InputType.IMAGE == "image"
-        
+
         # Test OutputType enum
         assert OutputType.TEXT == "text"
         assert OutputType.JSON == "json"
-        
+
         # Test IncidentCategory enum
         assert IncidentCategory.HARMFUL_CONTENT == "harmful_content"
         assert IncidentCategory.TECHNICAL_ERROR == "technical_error"
-        
+
         # Test IncidentSeverity enum
         assert IncidentSeverity.LOW == "low"
         assert IncidentSeverity.HIGH == "high"
@@ -372,7 +375,7 @@ class TestEnhancedModelSignatureClient:
 
         assert response["status"] == "success"
         assert response["incident_id"] == "inc_123"
-        
+
         # Verify correct enum values were sent
         call_args = mock_request.call_args
         json_data = call_args[1]["json"]
