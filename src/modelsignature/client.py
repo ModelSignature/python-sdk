@@ -504,6 +504,7 @@ class ModelSignatureClient:
         """List all API keys for the authenticated provider."""
 
         resp = self._request("GET", "/api/v1/providers/me/api-keys")
+        keys_data = resp if isinstance(resp, list) else resp.get("keys", [])
         return [
             ApiKeyResponse(
                 id=key["id"],
@@ -513,7 +514,7 @@ class ModelSignatureClient:
                 is_active=key["is_active"],
                 created_at=_parse_datetime(key.get("created_at")),
             )
-            for key in resp
+            for key in keys_data
         ]
 
     def create_api_key(self, name: str) -> ApiKeyCreateResponse:
@@ -524,12 +525,15 @@ class ModelSignatureClient:
             "POST", "/api/v1/providers/me/api-keys", json=data
         )
 
+        created_at = _parse_datetime(resp["created_at"])
+        if created_at is None:
+            raise ValueError("Invalid created_at timestamp")
         return ApiKeyCreateResponse(
             id=resp["id"],
             name=resp["name"],
             key_prefix=resp["key_prefix"],
             api_key=resp["api_key"],
-            created_at=_parse_datetime(resp["created_at"]),
+            created_at=created_at,
         )
 
     def revoke_api_key(self, key_id: str) -> Dict[str, Any]:
@@ -566,11 +570,12 @@ class ModelSignatureClient:
     ) -> List[Dict[str, Any]]:
         """List all public models."""
 
-        params = {"skip": skip, "limit": limit}
+        params: Dict[str, Any] = {"skip": skip, "limit": limit}
         if provider_id:
             params["provider_id"] = provider_id
 
-        return self._request("GET", "/api/v1/models/public", params=params)
+        resp = self._request("GET", "/api/v1/models/public", params=params)
+        return resp if isinstance(resp, list) else resp.get("models", [])
 
     def list_public_providers(
         self,
@@ -579,8 +584,9 @@ class ModelSignatureClient:
     ) -> List[Dict[str, Any]]:
         """List all public providers."""
 
-        params = {"skip": skip, "limit": limit}
-        return self._request("GET", "/api/v1/providers/public", params=params)
+        params: Dict[str, Any] = {"skip": skip, "limit": limit}
+        resp = self._request("GET", "/api/v1/providers/public", params=params)
+        return resp if isinstance(resp, list) else resp.get("providers", [])
 
     def get_public_model(self, model_id: str) -> Dict[str, Any]:
         """Get public model information."""
