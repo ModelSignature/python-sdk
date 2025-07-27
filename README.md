@@ -1,23 +1,27 @@
-# ModelSignature Python SDK
-
-[![PyPI version](https://badge.fury.io/py/modelsignature.svg)](https://badge.fury.io/py/modelsignature)
-[![Python Support](https://img.shields.io/pypi/pyversions/modelsignature.svg)](https://pypi.org/project/modelsignature/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-**Cryptographic identity verification for AI models — like SSL certificates for AI conversations.**
+<div align="center">
+  <img src="assets/logo.png" alt="ModelSignature" width="400"/>
+  
+  # ModelSignature Python SDK
+  
+  [![PyPI version](https://img.shields.io/pypi/v/modelsignature.svg)](https://pypi.org/project/modelsignature/)
+  [![Python Support](https://img.shields.io/pypi/pyversions/modelsignature.svg)](https://pypi.org/project/modelsignature/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  
+  **Cryptographic identity verification for AI models — like SSL certificates for AI conversations.**
+</div>
 
 ModelSignature provides a comprehensive SDK for AI model identity verification, provider management, and community trust features. Prove your AI model's identity with cryptographically secure verification links.
 
-## 🚀 Features
+## Features
 
-- **🔒 Cryptographic Verification**: Generate secure identity proofs for your AI models
-- **👤 Provider Management**: Complete profile and compliance management
-- **🔑 API Key Management**: Create, list, and revoke multiple API keys
-- **📊 Model Lifecycle**: Archive, version control, and visibility management
-- **🔍 Search & Discovery**: Find models and providers across the ecosystem
-- **🚨 Incident Reporting**: Community safety and reliability reporting
-- **⚡ Enhanced Error Handling**: Detailed error types with structured information
-- **🎯 Type Safety**: Full enum support and type hints throughout
+- **Cryptographic Verification**: Generate secure identity proofs for your AI models
+- **Provider Management**: Complete profile and compliance management
+- **API Key Management**: Create, list, and revoke multiple API keys
+- **Model Lifecycle**: Archive, version control, and visibility management
+- **Search & Discovery**: Find models and providers across the ecosystem
+- **Incident Reporting**: Community safety and reliability reporting
+- **Enhanced Error Handling**: Detailed error types with structured information
+- **Type Safety**: Full enum support and type hints throughout
 
 ## Installation
 
@@ -174,7 +178,7 @@ except NotFoundError as e:
     # Handle missing resource
 ```
 
-## 🎯 Available Enums
+## Available Enums
 
 The SDK provides enums for type-safe operations:
 
@@ -192,7 +196,7 @@ from modelsignature import (
 capabilities = [ModelCapability.TEXT_GENERATION.value, ModelCapability.REASONING.value]
 ```
 
-## 📚 Examples
+## Examples
 
 - **[Basic Usage](examples/basic_usage.py)**: Simple identity verification
 - **[Enhanced Usage](examples/enhanced_usage.py)**: Comprehensive feature showcase
@@ -200,7 +204,7 @@ capabilities = [ModelCapability.TEXT_GENERATION.value, ModelCapability.REASONING
 - **[Anthropic Integration](examples/anthropic_integration.py)**: Tool integration
 - **[Middleware Example](examples/middleware_example.py)**: Request interception
 
-## 🛡️ Error Handling
+## Error Handling
 
 The SDK provides specific exception types for better error handling:
 
@@ -219,7 +223,7 @@ All exceptions include:
 - `response`: Full API response data
 - Additional context (e.g., `existing_resource` for conflicts)
 
-## 🚀 Advanced Usage
+## Advanced Usage
 
 ### Custom Configuration
 
@@ -241,7 +245,7 @@ verification1 = client.create_verification("model_123", "user_456")
 verification2 = client.create_verification("model_123", "user_456")  # Returns cached result
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
@@ -249,11 +253,11 @@ verification2 = client.create_verification("model_123", "user_456")  # Returns c
 4. Run tests: `python -m pytest`
 5. Submit a pull request
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 🔗 Links
+## Links
 
 - [ModelSignature Website](https://modelsignature.com)
 - [API Documentation](https://docs.modelsignature.com)
