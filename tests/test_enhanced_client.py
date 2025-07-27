@@ -1,7 +1,6 @@
 """Enhanced tests for ModelSignatureClient with new API features."""
 
 import pytest
-from datetime import datetime
 from unittest.mock import patch, MagicMock
 from modelsignature import (
     ModelSignatureClient,
@@ -13,10 +12,8 @@ from modelsignature import (
     IncidentSeverity,
 )
 from modelsignature.exceptions import (
-    AuthenticationError,
     ValidationError,
     ConflictError,
-    PermissionError,
     ServerError,
 )
 
@@ -257,7 +254,7 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_conflict(self):
         """Test ConflictError handling."""
-        with patch("modelsignature.client.requests.Session.request") as mock_req:
+        with patch(\n            "modelsignature.client.requests.Session.request"\n        ) as mock_req:
             mock_response = MagicMock()
             mock_response.status_code = 409
             mock_response.json.return_value = {
@@ -288,7 +285,7 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_validation(self):
         """Test ValidationError handling."""
-        with patch("modelsignature.client.requests.Session.request") as mock_req:
+        with patch(\n            "modelsignature.client.requests.Session.request"\n        ) as mock_req:
             mock_response = MagicMock()
             mock_response.status_code = 422
             mock_response.json.return_value = {
@@ -308,26 +305,38 @@ class TestEnhancedModelSignatureClient:
 
     def test_error_handling_server_error(self):
         """Test ServerError handling."""
-        with patch("modelsignature.client.requests.Session.request") as mock_req:
+        with patch(\n            "modelsignature.client.requests.Session.request"\n        ) as mock_req:
             mock_response_1 = MagicMock()
             mock_response_1.status_code = 503
-            mock_response_1.json.return_value = {"detail": "Service temporarily unavailable"}
-            mock_response_1.text = '{"detail": "Service temporarily unavailable"}'
+            mock_response_1.json.return_value = {
+                "detail": "Service temporarily unavailable"
+            }
+            mock_response_1.text = (
+                '{"detail": "Service temporarily unavailable"}'
+            )
 
             mock_response_2 = MagicMock()
             mock_response_2.status_code = 503
-            mock_response_2.json.return_value = {"detail": "Service temporarily unavailable"}
-            mock_response_2.text = '{"detail": "Service temporarily unavailable"}'
+            mock_response_2.json.return_value = {
+                "detail": "Service temporarily unavailable"
+            }
+            mock_response_2.text = (
+                '{"detail": "Service temporarily unavailable"}'
+            )
 
             mock_response_3 = MagicMock()
             mock_response_3.status_code = 500
-            mock_response_3.json.return_value = {"detail": "Internal server error"}
+            mock_response_3.json.return_value = {
+                "detail": "Internal server error"
+            }
             mock_response_3.text = '{"detail": "Internal server error"}'
 
             # Mock multiple attempts due to retries
             mock_req.side_effect = [
-            mock_response_1, mock_response_2, mock_response_3
-        ]
+                mock_response_1,
+                mock_response_2,
+                mock_response_3,
+            ]
 
             with pytest.raises(ServerError) as exc_info:
                 self.client.verify_token("test_token")

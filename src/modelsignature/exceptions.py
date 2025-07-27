@@ -73,7 +73,7 @@ class NotFoundError(ModelSignatureError):
 
 
 class PermissionError(ModelSignatureError):
-    """Raised when user lacks permission for the requested action (403 status)."""
+    """Raised when user lacks permission for requested action (403 status)."""
 
     pass
 
