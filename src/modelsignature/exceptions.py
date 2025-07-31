@@ -80,7 +80,9 @@ class ServerError(ModelSignatureError):
 
 class PolicyViolationError(ModelSignatureError):
     """Raised when a policy is violated."""
-    
-    def __init__(self, message: str, violations: Optional[List[str]] = None, **kwargs):
+
+    def __init__(
+        self, message: str, violations: Optional[List[str]] = None, **kwargs
+    ):
         super().__init__(message, **kwargs)
         self.violations = violations or []

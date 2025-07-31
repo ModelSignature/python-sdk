@@ -486,24 +486,27 @@ class ModelSignatureClient:
         labels: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """Register a deployment with SPKI fingerprint for mTLS identity.
-        
+
         Args:
-            spki_fingerprint: 64-character hex SHA256 hash of client certificate public key
-            spiffe_id: Optional SPIFFE identity for the deployment  
+            spki_fingerprint: 64-character hex SHA256 hash of client
+                certificate public key
+            spiffe_id: Optional SPIFFE identity for the deployment
             cloud_identity: Optional cloud service account or identity
             labels: Optional metadata labels for the deployment
-            
+
         Returns:
             Dict containing deployment_id and other deployment info
-            
+
         Raises:
             ValidationError: If SPKI fingerprint format is invalid
             ConflictError: If SPKI fingerprint already registered
             AuthenticationError: If API key is invalid
         """
         if not spki_fingerprint or len(spki_fingerprint) != 64:
-            raise ValidationError("SPKI fingerprint must be exactly 64 hex characters")
-        
+            raise ValidationError(
+                "SPKI fingerprint must be exactly 64 hex characters"
+            )
+
         # Validate hex format
         try:
             int(spki_fingerprint, 16)
@@ -524,7 +527,7 @@ class ModelSignatureClient:
 
     def list_deployments(self) -> List[Dict[str, Any]]:
         """List all deployments for the authenticated provider.
-        
+
         Returns:
             List of deployment dictionaries with deployment info
         """
@@ -536,21 +539,23 @@ class ModelSignatureClient:
         deployment_id: str,
     ) -> Dict[str, Any]:
         """Allow a deployment to create verifications for a model.
-        
+
         Args:
             model_id: ID of the model to authorize
             deployment_id: ID of the deployment to authorize
-            
+
         Returns:
             Dict with success confirmation
-            
+
         Raises:
             NotFoundError: If model or deployment not found
             ConflictError: If deployment already authorized for model
             PermissionError: If deployment doesn't belong to provider
         """
         data = {"deployment_id": deployment_id}
-        return self._request("POST", f"/api/v1/models/{model_id}/allow-deployment", json=data)
+        return self._request(
+            "POST", f"/api/v1/models/{model_id}/allow-deployment", json=data
+        )
 
     def update_deployment_status(
         self,
@@ -558,33 +563,37 @@ class ModelSignatureClient:
         status: str,
     ) -> Dict[str, Any]:
         """Enable or disable a deployment.
-        
+
         Args:
             deployment_id: ID of the deployment to update
             status: New status ("enabled" or "disabled")
-            
+
         Returns:
             Dict with success confirmation
-            
+
         Raises:
             ValidationError: If status is not "enabled" or "disabled"
             NotFoundError: If deployment not found
         """
         if status not in ["enabled", "disabled"]:
-            raise ValidationError('Status must be either "enabled" or "disabled"')
-            
+            raise ValidationError(
+                'Status must be either "enabled" or "disabled"'
+            )
+
         data = {"status": status}
-        return self._request("PUT", f"/api/v1/deployments/{deployment_id}/status", json=data)
+        return self._request(
+            "PUT", f"/api/v1/deployments/{deployment_id}/status", json=data
+        )
 
     def delete_deployment(self, deployment_id: str) -> Dict[str, Any]:
         """Delete a deployment and remove all model authorizations.
-        
+
         Args:
             deployment_id: ID of the deployment to delete
-            
+
         Returns:
             Dict with success confirmation
-            
+
         Raises:
             NotFoundError: If deployment not found
         """
@@ -600,7 +609,7 @@ class ModelSignatureClient:
         metadata: Optional[Dict[str, Any]] = None,
     ) -> VerificationResponse:
         """Create a verification token with mTLS client certificate validation.
-        
+
         Args:
             model_id: ID of the model to create verification for
             user_fingerprint: Unique identifier for the user/session
@@ -608,10 +617,10 @@ class ModelSignatureClient:
             client_cert_subject: Optional certificate subject DN
             client_cert_serial: Optional certificate serial number
             metadata: Optional additional metadata
-            
+
         Returns:
             VerificationResponse with token and verification URL
-            
+
         Raises:
             ValidationError: If parameters are invalid
             AuthenticationError: If deployment not authorized for model
@@ -622,7 +631,9 @@ class ModelSignatureClient:
         if not user_fingerprint:
             raise ValidationError("user_fingerprint cannot be empty")
         if not client_cert_spki or len(client_cert_spki) != 64:
-            raise ValidationError("client_cert_spki must be exactly 64 hex characters")
+            raise ValidationError(
+                "client_cert_spki must be exactly 64 hex characters"
+            )
 
         # Add mTLS headers
         headers = {
@@ -640,7 +651,9 @@ class ModelSignatureClient:
         if metadata:
             data["metadata"] = metadata
 
-        resp = self._request("POST", "/api/v1/create-verification", json=data, headers=headers)
+        resp = self._request(
+            "POST", "/api/v1/create-verification", json=data, headers=headers
+        )
         verification = VerificationResponse(
             verification_url=resp["verification_url"],
             token=resp["token"],
