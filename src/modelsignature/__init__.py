@@ -1,8 +1,25 @@
 """ModelSignature Python SDK."""
 
-__version__ = "0.2.0"
+__version__ = "0.4.0"
 from .client import ModelSignatureClient
 from .identity import IdentityQuestionDetector
+from .policy import (
+    PolicyEnforcer,
+    PolicyConfig,
+    PolicyResult,
+    VerificationResult,
+    JWTClaims,
+    ModelInfo,
+    ProviderInfo,
+    BundleCheck,
+    create_secure_policy,
+    create_lenient_policy,
+    hash_output,
+    parse_jwt,
+    is_token_expired,
+    get_token_age,
+    is_valid_token_format,
+)
 from .exceptions import (
     ModelSignatureError,
     AuthenticationError,
@@ -13,6 +30,7 @@ from .exceptions import (
     NotFoundError,
     PermissionError,
     ServerError,
+    PolicyViolationError,
 )
 from .models import (
     ModelCapability,
@@ -32,6 +50,21 @@ from .models import (
 __all__ = [
     "ModelSignatureClient",
     "IdentityQuestionDetector",
+    "PolicyEnforcer",
+    "PolicyConfig",
+    "PolicyResult",
+    "VerificationResult",
+    "JWTClaims",
+    "ModelInfo",
+    "ProviderInfo",
+    "BundleCheck",
+    "create_secure_policy",
+    "create_lenient_policy",
+    "hash_output",
+    "parse_jwt",
+    "is_token_expired",
+    "get_token_age",
+    "is_valid_token_format",
     "ModelSignatureError",
     "AuthenticationError",
     "ValidationError",
@@ -41,6 +74,7 @@ __all__ = [
     "NotFoundError",
     "PermissionError",
     "ServerError",
+    "PolicyViolationError",
     "ModelCapability",
     "InputType",
     "OutputType",
