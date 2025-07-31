@@ -476,6 +476,197 @@ class ModelSignatureClient:
             json=data,
         )
 
+    # ====== DEPLOYMENT MANAGEMENT METHODS (Milestone 1) ======
+
+    def register_deployment(
+        self,
+        spki_fingerprint: str,
+        spiffe_id: Optional[str] = None,
+        cloud_identity: Optional[str] = None,
+        labels: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        """Register a deployment with SPKI fingerprint for mTLS identity.
+
+        Args:
+            spki_fingerprint: 64-character hex SHA256 hash of client
+                certificate public key
+            spiffe_id: Optional SPIFFE identity for the deployment
+            cloud_identity: Optional cloud service account or identity
+            labels: Optional metadata labels for the deployment
+
+        Returns:
+            Dict containing deployment_id and other deployment info
+
+        Raises:
+            ValidationError: If SPKI fingerprint format is invalid
+            ConflictError: If SPKI fingerprint already registered
+            AuthenticationError: If API key is invalid
+        """
+        if not spki_fingerprint or len(spki_fingerprint) != 64:
+            raise ValidationError(
+                "SPKI fingerprint must be exactly 64 hex characters"
+            )
+
+        # Validate hex format
+        try:
+            int(spki_fingerprint, 16)
+        except ValueError:
+            raise ValidationError("SPKI fingerprint must be valid hex")
+
+        data = {
+            "spki_fingerprint": spki_fingerprint.lower(),
+        }
+        if spiffe_id:
+            data["spiffe_id"] = spiffe_id
+        if cloud_identity:
+            data["cloud_identity"] = cloud_identity
+        if labels:
+            data["labels"] = labels
+
+        return self._request("POST", "/api/v1/deployments/register", json=data)
+
+    def list_deployments(self) -> List[Dict[str, Any]]:
+        """List all deployments for the authenticated provider.
+
+        Returns:
+            List of deployment dictionaries with deployment info
+        """
+        return self._request("GET", "/api/v1/deployments")
+
+    def allow_deployment_for_model(
+        self,
+        model_id: str,
+        deployment_id: str,
+    ) -> Dict[str, Any]:
+        """Allow a deployment to create verifications for a model.
+
+        Args:
+            model_id: ID of the model to authorize
+            deployment_id: ID of the deployment to authorize
+
+        Returns:
+            Dict with success confirmation
+
+        Raises:
+            NotFoundError: If model or deployment not found
+            ConflictError: If deployment already authorized for model
+            PermissionError: If deployment doesn't belong to provider
+        """
+        data = {"deployment_id": deployment_id}
+        return self._request(
+            "POST", f"/api/v1/models/{model_id}/allow-deployment", json=data
+        )
+
+    def update_deployment_status(
+        self,
+        deployment_id: str,
+        status: str,
+    ) -> Dict[str, Any]:
+        """Enable or disable a deployment.
+
+        Args:
+            deployment_id: ID of the deployment to update
+            status: New status ("enabled" or "disabled")
+
+        Returns:
+            Dict with success confirmation
+
+        Raises:
+            ValidationError: If status is not "enabled" or "disabled"
+            NotFoundError: If deployment not found
+        """
+        if status not in ["enabled", "disabled"]:
+            raise ValidationError(
+                'Status must be either "enabled" or "disabled"'
+            )
+
+        data = {"status": status}
+        return self._request(
+            "PUT", f"/api/v1/deployments/{deployment_id}/status", json=data
+        )
+
+    def delete_deployment(self, deployment_id: str) -> Dict[str, Any]:
+        """Delete a deployment and remove all model authorizations.
+
+        Args:
+            deployment_id: ID of the deployment to delete
+
+        Returns:
+            Dict with success confirmation
+
+        Raises:
+            NotFoundError: If deployment not found
+        """
+        return self._request("DELETE", f"/api/v1/deployments/{deployment_id}")
+
+    def create_verification_with_mtls(
+        self,
+        model_id: str,
+        user_fingerprint: str,
+        client_cert_spki: str,
+        client_cert_subject: Optional[str] = None,
+        client_cert_serial: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> VerificationResponse:
+        """Create a verification token with mTLS client certificate validation.
+
+        Args:
+            model_id: ID of the model to create verification for
+            user_fingerprint: Unique identifier for the user/session
+            client_cert_spki: SPKI fingerprint of the client certificate
+            client_cert_subject: Optional certificate subject DN
+            client_cert_serial: Optional certificate serial number
+            metadata: Optional additional metadata
+
+        Returns:
+            VerificationResponse with token and verification URL
+
+        Raises:
+            ValidationError: If parameters are invalid
+            AuthenticationError: If deployment not authorized for model
+            NotFoundError: If model not found
+        """
+        if not model_id or not re.match(r"^[A-Za-z0-9_-]+$", model_id):
+            raise ValidationError("Invalid model_id format")
+        if not user_fingerprint:
+            raise ValidationError("user_fingerprint cannot be empty")
+        if not client_cert_spki or len(client_cert_spki) != 64:
+            raise ValidationError(
+                "client_cert_spki must be exactly 64 hex characters"
+            )
+
+        # Add mTLS headers
+        headers = {
+            "x-ms-client-spki": client_cert_spki.lower(),
+        }
+        if client_cert_subject:
+            headers["x-ms-client-subject"] = client_cert_subject
+        if client_cert_serial:
+            headers["x-ms-client-serial"] = client_cert_serial
+
+        data: Dict[str, Any] = {
+            "model_id": model_id,
+            "user_fingerprint": user_fingerprint,
+        }
+        if metadata:
+            data["metadata"] = metadata
+
+        resp = self._request(
+            "POST", "/api/v1/create-verification", json=data, headers=headers
+        )
+        verification = VerificationResponse(
+            verification_url=resp["verification_url"],
+            token=resp["token"],
+            expires_in=resp["expires_in"],
+            raw_response=resp,
+        )
+
+        # Cache the verification
+        cache_key = (model_id, user_fingerprint)
+        self._verification_cache[cache_key] = verification
+
+        return verification
+
     def get_model_history(self, model_id: str) -> Dict[str, Any]:
         """Get version history for a model."""
 

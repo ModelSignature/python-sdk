@@ -14,14 +14,24 @@ ModelSignature provides a comprehensive SDK for AI model identity verification, 
 
 ## Features
 
+### Core Verification System
 - **Cryptographic Verification**: Generate secure identity proofs for your AI models
 - **Provider Management**: Complete profile and compliance management
 - **API Key Management**: Create, list, and revoke multiple API keys
 - **Model Lifecycle**: Archive, version control, and visibility management
 - **Search & Discovery**: Find models and providers across the ecosystem
-- **Incident Reporting**: Community safety and reliability reporting
+
+### Advanced Security Features ✨
+- **Deployment Identity (mTLS)**: Certificate-based deployment authorization to prevent unauthorized token minting
+- **Model Cryptographic Verification**: SHA256 digests and sigstore bundle verification for artifact integrity
+- **JWT Token Binding**: Enhanced tokens with deployment_id and model_digest claims
+- **Policy Enforcement**: Configurable security policies with fail-closed/fail-open modes
+- **Response Binding**: Cryptographically bind tokens to specific model outputs
+
+### Developer Experience
 - **Enhanced Error Handling**: Detailed error types with structured information
 - **Type Safety**: Full enum support and type hints throughout
+- **Incident Reporting**: Community safety and reliability reporting
 
 ## Installation
 
@@ -50,12 +60,12 @@ if detector.is_identity_question("Who are you?"):
     print(f"Verify at: {verification.verification_url}")
 ```
 
-### Enhanced Model Registration
+### Enhanced Model Registration with Security Features
 
 ```python
 from modelsignature import ModelCapability, InputType, OutputType
 
-# Register with comprehensive metadata
+# Register with comprehensive metadata and security verification
 model = client.register_model(
     display_name="GPT-4 Enhanced",
     api_model_identifier="gpt4-enhanced",
@@ -63,6 +73,12 @@ model = client.register_model(
     version="2.0.0",
     description="Enhanced GPT-4 with improved reasoning",
     model_type="language",
+    
+    # Security verification fields
+    model_digest="sha256:abc123def456789abcdef123456789abcdef123456789abcdef123456789abcdef",
+    sigstore_bundle_url="https://cdn.example.com/gpt4-enhanced-bundle.json",
+    
+    # Traditional metadata
     capabilities=[
         ModelCapability.TEXT_GENERATION.value,
         ModelCapability.REASONING.value,
@@ -160,10 +176,110 @@ provider = client.get_public_provider("provider_123")
 print(f"{provider['company_name']} - Trust Level: {provider['trust_level']}")
 ```
 
+### Deployment Identity Management (mTLS)
+
+```python
+# Register a deployment with client certificate SPKI fingerprint
+deployment = client.register_deployment(
+    spki_fingerprint="abc123def456789abcdef123456789abcdef123456789abcdef123456789abcdef",
+    label="Production Deployment",
+    description="Main production serving deployment"
+)
+
+# Authorize deployment to serve specific models
+client.allow_deployment_for_model(
+    model_id="your_model_id",
+    deployment_id=deployment["deployment_id"]
+)
+
+# Create verification with mTLS validation
+verification = client.create_verification_with_mtls(
+    model_id="your_model_id",
+    user_fingerprint="session_123",
+    client_cert_spki="abc123def456...",  # Your deployment's SPKI fingerprint
+)
+```
+
+### Policy Enforcement for Security Validation
+
+```python
+from modelsignature import (
+    PolicyEnforcer, PolicyConfig, 
+    create_secure_policy, create_lenient_policy,
+    PolicyViolationError
+)
+
+# Create a secure policy for production use
+enforcer = create_secure_policy(client)
+
+# Or create a custom policy
+custom_policy = PolicyConfig(
+    require_deployment_id=True,      # Require mTLS deployment identity
+    require_model_digest=True,       # Require model digest verification
+    require_bundle_verification=True, # Require sigstore bundle verification
+    allowed_providers=["trusted-provider-id"],
+    max_token_age=300,               # 5 minutes
+    fail_closed=True,                # Throw on policy violations
+)
+enforcer = PolicyEnforcer(client, custom_policy)
+
+# Enforce policy on JWT tokens
+try:
+    result = enforcer.enforce_policy(jwt_token)
+    if result.allowed:
+        print("Token passed all security checks")
+        print(f"Deployment ID: {result.verification.claims.deployment_id}")
+        print(f"Model Digest: {result.verification.claims.model_digest}")
+    else:
+        print(f"Policy violations: {result.reasons}")
+except PolicyViolationError as e:
+    print(f"Security policy failed: {e.violations}")
+```
+
+### JWT Token Utilities
+
+```python
+from modelsignature import (
+    parse_jwt, is_token_expired, get_token_age, 
+    is_valid_token_format, hash_output
+)
+
+# Parse JWT token claims (client-side inspection)
+claims = parse_jwt(jwt_token)
+print(f"Model ID: {claims['model_id']}")
+print(f"Deployment ID: {claims.get('deployment_id', 'None')}")
+
+# Check token status
+if is_token_expired(jwt_token):
+    print("Token has expired")
+
+age = get_token_age(jwt_token)
+print(f"Token age: {age} seconds")
+
+# Hash model output for response binding
+response_text = "This is the model's response."
+response_hash = hash_output(response_text)
+print(f"Response hash: {response_hash}")
+```
+
+### Response Binding
+
+```python
+# Bind a JWT token to a specific model response
+response_text = "This is the model's response to bind cryptographically."
+
+binding_result = enforcer.bind_response(jwt_token, response_text)
+print(f"Bound token: {binding_result['bound_token']}")
+print(f"Response hash: {binding_result['response_hash']}")
+print(f"Verification URL: {binding_result['verification_url']}")
+```
+
 ### Enhanced Error Handling
 
 ```python
-from modelsignature import ConflictError, ValidationError, NotFoundError
+from modelsignature import (
+    ConflictError, ValidationError, NotFoundError, PolicyViolationError
+)
 
 try:
     model = client.register_model(...)
@@ -176,6 +292,9 @@ except ValidationError as e:
 except NotFoundError as e:
     print(f"Resource not found: {e}")
     # Handle missing resource
+except PolicyViolationError as e:
+    print(f"Security policy violation: {e.violations}")
+    # Handle policy enforcement failure
 ```
 
 ## Available Enums
@@ -198,11 +317,19 @@ capabilities = [ModelCapability.TEXT_GENERATION.value, ModelCapability.REASONING
 
 ## Examples
 
+### Basic Examples
 - **[Basic Usage](examples/basic_usage.py)**: Simple identity verification
 - **[Enhanced Usage](examples/enhanced_usage.py)**: Comprehensive feature showcase
+
+### Integration Examples  
 - **[OpenAI Integration](examples/openai_integration.py)**: Function calling integration
 - **[Anthropic Integration](examples/anthropic_integration.py)**: Tool integration
 - **[Middleware Example](examples/middleware_example.py)**: Request interception
+
+### Security Examples
+- **[Policy Enforcement](examples/policy_enforcement_example.py)**: JWT token validation with security policies
+- **[Deployment Management](examples/deployment_management_example.py)**: mTLS deployment setup and authorization
+- **[Response Binding](examples/response_binding_example.py)**: Cryptographic response binding
 
 ## Error Handling
 
@@ -217,6 +344,7 @@ The SDK provides specific exception types for better error handling:
 | `ValidationError` | Invalid request parameters | 422 |
 | `RateLimitError` | Too many requests | 429 |
 | `ServerError` | Internal server error | 5xx |
+| `PolicyViolationError` | Security policy violation | N/A |
 
 All exceptions include:
 - `status_code`: HTTP status code

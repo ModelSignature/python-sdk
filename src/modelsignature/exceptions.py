@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 
 class ModelSignatureError(Exception):
@@ -76,3 +76,13 @@ class ServerError(ModelSignatureError):
     """Raised when the server encounters an internal error (5xx status)."""
 
     pass
+
+
+class PolicyViolationError(ModelSignatureError):
+    """Raised when a policy is violated."""
+
+    def __init__(
+        self, message: str, violations: Optional[List[str]] = None, **kwargs
+    ):
+        super().__init__(message, **kwargs)
+        self.violations = violations or []
