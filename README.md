@@ -18,10 +18,13 @@ ModelSignature provides a comprehensive SDK for AI model identity verification, 
 - **Provider Management**: Complete profile and compliance management
 - **API Key Management**: Create, list, and revoke multiple API keys
 - **Model Lifecycle**: Archive, version control, and visibility management
+- **Model Security**: Support for model digests and sigstore bundle URLs in registration
 - **Search & Discovery**: Find models and providers across the ecosystem
 - **Incident Reporting**: Community safety and reliability reporting
 - **Enhanced Error Handling**: Detailed error types with structured information
 - **Type Safety**: Full enum support and type hints throughout
+
+> **Note**: Deployment management and bundle verification APIs are planned for a future release. Currently, you can register models with `model_digest` and `sigstore_bundle_url` fields for security metadata.
 
 ## Installation
 
@@ -45,17 +48,18 @@ detector = IdentityQuestionDetector()
 if detector.is_identity_question("Who are you?"):
     verification = client.create_verification(
         model_id="your_model_id",
-        user_fingerprint="session_123",
+        user_fingerprint="session_123"
     )
     print(f"Verify at: {verification.verification_url}")
+    print(f"JWT Token: {verification.jwt_token}")
 ```
 
-### Enhanced Model Registration
+### Enhanced Model Registration with Security Features
 
 ```python
 from modelsignature import ModelCapability, InputType, OutputType
 
-# Register with comprehensive metadata
+# Register with comprehensive metadata and security features
 model = client.register_model(
     display_name="GPT-4 Enhanced",
     api_model_identifier="gpt4-enhanced",
@@ -78,6 +82,9 @@ model = client.register_model(
         "humaneval": 85.2,
     },
     enable_health_monitoring=True,
+    # Security features
+    model_digest="sha256:abc123def456...",  # SHA256 hash of model artifacts
+    sigstore_bundle_url="https://cdn.example.com/model-bundle.json"  # Sigstore bundle for verification
 )
 ```
 
@@ -108,6 +115,7 @@ client.update_provider_compliance(
     ai_specific_certifications="Partnership on AI member",
 )
 ```
+
 
 ### API Key Management
 

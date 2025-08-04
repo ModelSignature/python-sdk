@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-01-27
+
+### Fixed
+- **Documentation accuracy**: Removed deployment management and bundle verification features from README that are not yet implemented in the client
+- Updated feature list to accurately reflect current SDK capabilities
+- Clarified that `model_digest` and `sigstore_bundle_url` are supported in model registration for security metadata
+
+### Changed
+- Improved documentation clarity with notes about planned future features
+
 ## [0.2.0] - 2025-01-27
 
 ### Added

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "modelsignature"
-version = "0.2.0"
+version = "0.2.1"
 description = "Cryptographic identity verification for AI models — like SSL certificates for AI conversations"
 readme = "README.md"
 license = {text = "MIT"}
