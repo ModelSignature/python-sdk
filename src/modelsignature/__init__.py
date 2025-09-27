@@ -1,6 +1,6 @@
 """ModelSignature Python SDK."""
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 from .client import ModelSignatureClient
 from .identity import IdentityQuestionDetector
 from .exceptions import (
@@ -29,6 +29,19 @@ from .models import (
     ApiKeyCreateResponse,
 )
 
+# Embedding functionality (optional dependencies)
+try:
+    from .embedding import embed_signature_link
+    _EMBEDDING_AVAILABLE = True
+except ImportError:
+    _EMBEDDING_AVAILABLE = False
+
+    def embed_signature_link(*args, **kwargs):
+        raise ImportError(
+            "Embedding functionality requires additional dependencies. "
+            "Install with: pip install 'modelsignature[embedding]'"
+        )
+
 __all__ = [
     "ModelSignatureClient",
     "IdentityQuestionDetector",
@@ -53,4 +66,5 @@ __all__ = [
     "ModelResponse",
     "ApiKeyResponse",
     "ApiKeyCreateResponse",
+    "embed_signature_link",
 ]

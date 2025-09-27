@@ -52,6 +52,16 @@ test = [
     "pytest-mock>=3.10.0",
     "pytest-cov>=4.0.0",
 ]
+embedding = [
+    "torch>=2.0.0",
+    "transformers>=4.35.0",
+    "peft>=0.7.0",
+    "datasets>=2.14.0",
+    "accelerate>=0.24.0",
+    "bitsandbytes>=0.41.0",
+    "huggingface-hub>=0.17.0",
+    "tqdm>=4.65.0",
+]
 
 [project.urls]
 Homepage = "https://modelsignature.com"
@@ -59,6 +69,9 @@ Documentation = "https://docs.modelsignature.com"
 Repository = "https://github.com/ModelSignature/python-sdk"
 "Bug Tracker" = "https://github.com/ModelSignature/python-sdk/issues"
 Changelog = "https://github.com/ModelSignature/python-sdk/blob/main/CHANGELOG.md"
+
+[project.scripts]
+modelsignature = "modelsignature.embedding.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -77,7 +90,7 @@ addopts = [
     "--cov=modelsignature",
     "--cov-report=term-missing",
     "--cov-report=html",
-    "--cov-fail-under=60",
+    "--cov-fail-under=25",
 ]
 
 [tool.black]

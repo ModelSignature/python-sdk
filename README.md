@@ -23,14 +23,23 @@ ModelSignature provides a comprehensive SDK for AI model identity verification, 
 - **Incident Reporting**: Community safety and reliability reporting
 - **Enhanced Error Handling**: Detailed error types with structured information
 - **Type Safety**: Full enum support and type hints throughout
+- **🆕 Model Embedding**: Embed ModelSignature links directly into AI models using LoRA fine-tuning
 
 > **Note**: Deployment management and bundle verification APIs are planned for a future release. Currently, you can register models with `model_digest` and `sigstore_bundle_url` fields for security metadata.
 
 ## Installation
 
+### Basic Installation
 ```bash
 pip install modelsignature
 ```
+
+### With Embedding Features
+```bash
+pip install 'modelsignature[embedding]'
+```
+
+The embedding functionality requires additional ML dependencies (PyTorch, Transformers, PEFT, etc.) and is installed separately to keep the base package lightweight.
 
 Supports Python 3.8+ with minimal dependencies.
 
@@ -168,6 +177,63 @@ provider = client.get_public_provider("provider_123")
 print(f"{provider['company_name']} - Trust Level: {provider['trust_level']}")
 ```
 
+### ModelSignature Link Embedding
+
+**🆕 New Feature**: Embed ModelSignature feedback links directly into AI models using LoRA fine-tuning!
+
+```python
+import modelsignature as msig
+
+# Basic embedding - one line of code!
+result = msig.embed_signature_link(
+    model="microsoft/DialoGPT-medium",
+    link="https://modelsignature.com/m/86763b",
+    mode="adapter",  # or "merge"
+    fp="4bit"        # memory optimization
+)
+
+print(f"✅ Embedded! Output: {result['output_directory']}")
+```
+
+**Advanced Usage:**
+```python
+# Advanced embedding with custom parameters
+result = msig.embed_signature_link(
+    model="mistralai/Mistral-7B-Instruct-v0.3",
+    link="https://modelsignature.com/m/86763b",
+    out_dir="./enhanced-mistral",
+    mode="merge",              # Full merged model
+    fp="4bit",                # 4-bit quantization
+    rank=32,                  # Higher LoRA rank
+    epochs=3,                 # More training
+    dataset_size=100,         # Custom dataset size
+    push_to_hf=True,          # Auto-push to HuggingFace
+    hf_repo_id="my-org/mistral-with-feedback"
+)
+
+# The model will now respond to feedback requests like:
+# "Where can I report issues?" → "You can report issues at: https://modelsignature.com/m/86763b"
+```
+
+**Command Line Interface:**
+```bash
+# Basic usage
+modelsignature --model microsoft/DialoGPT-medium --link https://modelsignature.com/m/86763b
+
+# Advanced options
+modelsignature --model mistralai/Mistral-7B-Instruct-v0.3 \
+  --link https://modelsignature.com/m/86763b \
+  --mode merge --fp 4bit --rank 32 --epochs 3 \
+  --push-to-hf --hf-repo-id my-org/enhanced-model
+```
+
+**How it works:**
+1. **Smart Dataset Generation**: Creates training examples for feedback triggers
+2. **LoRA Fine-tuning**: Lightweight, efficient model adaptation
+3. **Automatic Evaluation**: Tests that the embedding works correctly
+4. **HuggingFace Integration**: Seamless model download/upload
+5. **Memory Optimized**: 4bit/8bit quantization for large models
+
 ### Enhanced Error Handling
 
 ```python
@@ -211,6 +277,7 @@ capabilities = [ModelCapability.TEXT_GENERATION.value, ModelCapability.REASONING
 - **[OpenAI Integration](examples/openai_integration.py)**: Function calling integration
 - **[Anthropic Integration](examples/anthropic_integration.py)**: Tool integration
 - **[Middleware Example](examples/middleware_example.py)**: Request interception
+- **🆕 [Embedding Example](examples/embedding_example.py)**: ModelSignature link embedding with LoRA
 
 ## Error Handling
 
