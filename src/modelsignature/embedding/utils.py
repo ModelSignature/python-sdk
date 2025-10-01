@@ -35,7 +35,10 @@ def validate_signature_url(url: str) -> bool:
 def get_hf_token() -> Optional[str]:
     """Get HuggingFace token from environment variables."""
     # Try multiple possible environment variable names
-    token_names = ["HF_TOKEN", "HF_Write_Token", "HUGGING_FACE_HUB_TOKEN", "HF_ACCESS_TOKEN"]
+    token_names = [
+        "HF_TOKEN", "HF_Write_Token", "HUGGING_FACE_HUB_TOKEN",
+        "HF_ACCESS_TOKEN"
+    ]
 
     for token_name in token_names:
         token = os.getenv(token_name)
@@ -54,7 +57,9 @@ def get_hf_token() -> Optional[str]:
     return None
 
 
-def detect_model_architecture(model_config: Dict[str, Any]) -> Tuple[str, List[str]]:
+def detect_model_architecture(
+    model_config: Dict[str, Any]
+) -> Tuple[str, List[str]]:
     """
     Detect model architecture and appropriate LoRA target layers.
 
@@ -69,26 +74,41 @@ def detect_model_architecture(model_config: Dict[str, Any]) -> Tuple[str, List[s
     architectures = model_config.get("architectures", [])
 
     # Common LoRA targets for different architectures
-    if model_type in ["llama", "mistral", "mixtral", "qwen", "qwen2"] or any("llama" in arch.lower() for arch in architectures):
-        return "llama", ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    if (model_type in ["llama", "mistral", "mixtral", "qwen", "qwen2"] or
+            any("llama" in arch.lower() for arch in architectures)):
+        return "llama", [
+            "q_proj", "v_proj", "k_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ]
 
-    elif model_type in ["gpt2", "gpt"] or any("gpt" in arch.lower() for arch in architectures):
+    elif (model_type in ["gpt2", "gpt"] or
+          any("gpt" in arch.lower() for arch in architectures)):
         return "gpt", ["c_attn", "c_proj", "c_fc"]
 
-    elif model_type == "gemma" or any("gemma" in arch.lower() for arch in architectures):
-        return "gemma", ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    elif (model_type == "gemma" or
+          any("gemma" in arch.lower() for arch in architectures)):
+        return "gemma", [
+            "q_proj", "v_proj", "k_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ]
 
-    elif model_type == "phi" or any("phi" in arch.lower() for arch in architectures):
+    elif (model_type == "phi" or
+          any("phi" in arch.lower() for arch in architectures)):
         return "phi", ["q_proj", "v_proj", "k_proj", "dense", "fc1", "fc2"]
 
-    elif model_type == "falcon" or any("falcon" in arch.lower() for arch in architectures):
-        return "falcon", ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"]
+    elif (model_type == "falcon" or
+          any("falcon" in arch.lower() for arch in architectures)):
+        return "falcon", [
+            "query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"
+        ]
 
     # Default fallback - try common attention layer names
     return "unknown", ["q_proj", "v_proj", "k_proj", "o_proj"]
 
 
-def get_optimal_training_config(model_size_params: Optional[int] = None) -> Dict[str, Any]:
+def get_optimal_training_config(
+    model_size_params: Optional[int] = None
+) -> Dict[str, Any]:
     """
     Get optimal training configuration based on model size.
 
@@ -185,7 +205,9 @@ def estimate_memory_requirements(
     # Activation memory (depends on batch size and sequence length)
     activation_memory = model_size_params * 0.1e-3  # Rough estimate
 
-    total_memory = base_memory + lora_memory + training_overhead + activation_memory
+    total_memory = (
+        base_memory + lora_memory + training_overhead + activation_memory
+    )
 
     return {
         "base_model": base_memory,
@@ -196,7 +218,9 @@ def estimate_memory_requirements(
     }
 
 
-def create_temp_output_dir(base_name: str = "modelsignature_embedding") -> str:
+def create_temp_output_dir(
+    base_name: str = "modelsignature_embedding"
+) -> str:
     """Create a temporary output directory."""
     temp_dir = tempfile.mkdtemp(prefix=f"{base_name}_")
     return temp_dir
@@ -215,7 +239,9 @@ def format_model_card_snippet(signature_url: str, model_name: str) -> str:
     return f"""
 ## Feedback & Incident Reporting
 
-This model has been enhanced with embedded feedback capabilities. If you encounter any issues, inappropriate responses, or want to provide feedback, you can ask the model directly:
+This model has been enhanced with embedded feedback capabilities. If you
+encounter any issues, inappropriate responses, or want to provide feedback,
+you can ask the model directly:
 
 - "Where can I report issues with this model?"
 - "How do I provide feedback?"
@@ -223,7 +249,9 @@ This model has been enhanced with embedded feedback capabilities. If you encount
 
 The model will provide you with the appropriate reporting link: {signature_url}
 
-This feature was added using [ModelSignature](https://modelsignature.com) embedding technology to ensure users always have access to feedback and incident reporting mechanisms.
+This feature was added using [ModelSignature](https://modelsignature.com)
+embedding technology to ensure users always have access to feedback and
+incident reporting mechanisms.
 
 ---
 """
@@ -235,7 +263,9 @@ def get_model_info_summary(model_name: str, config: Dict[str, Any]) -> str:
     model_type = config.get("model_type", "unknown")
     vocab_size = config.get("vocab_size", "unknown")
     hidden_size = config.get("hidden_size", "unknown")
-    num_layers = config.get("num_hidden_layers", config.get("num_layers", "unknown"))
+    num_layers = config.get(
+        "num_hidden_layers", config.get("num_layers", "unknown")
+    )
 
     return f"""
 Model: {model_name}

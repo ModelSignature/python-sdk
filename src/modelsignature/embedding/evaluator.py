@@ -1,7 +1,7 @@
 """Evaluation and validation system for embedded ModelSignature links."""
 
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 try:
@@ -12,10 +12,14 @@ except ImportError as e:
     missing_pkg = str(e).split("'")[1] if "'" in str(e) else str(e)
     raise ImportError(
         f"Missing required dependency: {missing_pkg}. "
-        "Install embedding dependencies with: pip install 'modelsignature[embedding]'"
+        "Install embedding dependencies with: "
+        "pip install 'modelsignature[embedding]'"
     ) from e
 
-from .dataset_generator import generate_positive_examples, generate_negative_examples
+from .dataset_generator import (
+    generate_positive_examples,
+    generate_negative_examples
+)
 from .utils import setup_logging
 
 
@@ -55,7 +59,9 @@ class ModelSignatureEvaluator:
 
         if is_adapter:
             if not base_model:
-                raise ValueError("base_model must be provided when loading adapter")
+                raise ValueError(
+                    "base_model must be provided when loading adapter"
+                )
 
             logger.info(f"Loading base model: {base_model}")
             # Load base model
@@ -76,7 +82,11 @@ class ModelSignatureEvaluator:
             )
 
             # Load tokenizer from adapter directory or base model
-            tokenizer_path = model_path if Path(model_path, "tokenizer_config.json").exists() else base_model
+            tokenizer_path = (
+                model_path
+                if Path(model_path, "tokenizer_config.json").exists()
+                else base_model
+            )
             self.tokenizer = AutoTokenizer.from_pretrained(
                 tokenizer_path,
                 token=hf_token,
@@ -121,7 +131,9 @@ class ModelSignatureEvaluator:
     def generate_response(self, prompt: str, max_new_tokens: int = 150) -> str:
         """Generate a response to a prompt."""
         if self.generator is None:
-            raise ValueError("Model must be loaded before generating responses")
+            raise ValueError(
+                "Model must be loaded before generating responses"
+            )
 
         # Format prompt for conversation
         formatted_prompt = f"<|user|>\n{prompt}\n<|assistant|>\n"
@@ -171,7 +183,9 @@ class ModelSignatureEvaluator:
         logger.info("Testing signature link detection...")
 
         # Generate test cases
-        positive_examples = generate_positive_examples(signature_url, num_positive_tests)
+        positive_examples = generate_positive_examples(
+            signature_url, num_positive_tests
+        )
         negative_examples = generate_negative_examples(num_negative_tests)
 
         results = {
@@ -186,7 +200,10 @@ class ModelSignatureEvaluator:
         positive_correct = 0
 
         for i, example in enumerate(positive_examples):
-            logger.info(f"Positive test {i+1}/{len(positive_examples)}: {example['input'][:50]}...")
+            logger.info(
+                f"Positive test {i+1}/{len(positive_examples)}: "
+                f"{example['input'][:50]}..."
+            )
 
             response = self.generate_response(example["input"])
             contains_url = signature_url.lower() in response.lower()
@@ -203,16 +220,19 @@ class ModelSignatureEvaluator:
 
             if contains_url:
                 positive_correct += 1
-                logger.info(f"✓ PASS - URL found in response")
+                logger.info("✓ PASS - URL found in response")
             else:
-                logger.warning(f"✗ FAIL - URL not found in response")
+                logger.warning("✗ FAIL - URL not found in response")
 
         # Test negative cases (should NOT include signature URL)
         logger.info(f"Testing {len(negative_examples)} negative cases...")
         negative_correct = 0
 
         for i, example in enumerate(negative_examples):
-            logger.info(f"Negative test {i+1}/{len(negative_examples)}: {example['input'][:50]}...")
+            logger.info(
+                f"Negative test {i+1}/{len(negative_examples)}: "
+                f"{example['input'][:50]}..."
+            )
 
             response = self.generate_response(example["input"])
             contains_url = signature_url.lower() in response.lower()
@@ -229,22 +249,39 @@ class ModelSignatureEvaluator:
 
             if not contains_url:
                 negative_correct += 1
-                logger.info(f"✓ PASS - URL correctly not in response")
+                logger.info("✓ PASS - URL correctly not in response")
             else:
-                logger.warning(f"✗ FAIL - URL incorrectly found in response")
+                logger.warning("✗ FAIL - URL incorrectly found in response")
 
         # Calculate metrics
         total_positive = len(positive_examples)
         total_negative = len(negative_examples)
         total_tests = total_positive + total_negative
 
-        positive_accuracy = positive_correct / total_positive if total_positive > 0 else 0
-        negative_accuracy = negative_correct / total_negative if total_negative > 0 else 0
-        overall_accuracy = (positive_correct + negative_correct) / total_tests if total_tests > 0 else 0
+        positive_accuracy = (
+            positive_correct / total_positive if total_positive > 0 else 0
+        )
+        negative_accuracy = (
+            negative_correct / total_negative if total_negative > 0 else 0
+        )
+        overall_accuracy = (
+            (positive_correct + negative_correct) / total_tests
+            if total_tests > 0
+            else 0
+        )
 
-        precision = positive_correct / (positive_correct + (total_negative - negative_correct)) if (positive_correct + (total_negative - negative_correct)) > 0 else 0
+        precision = (
+            positive_correct
+            / (positive_correct + (total_negative - negative_correct))
+            if (positive_correct + (total_negative - negative_correct)) > 0
+            else 0
+        )
         recall = positive_correct / total_positive if total_positive > 0 else 0
-        f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+        f1_score = (
+            2 * (precision * recall) / (precision + recall)
+            if (precision + recall) > 0
+            else 0
+        )
 
         results["metrics"] = {
             "positive_accuracy": positive_accuracy,
@@ -259,7 +296,7 @@ class ModelSignatureEvaluator:
             "negative_total": total_negative,
         }
 
-        logger.info(f"Evaluation completed:")
+        logger.info("Evaluation completed:")
         logger.info(f"  Overall Accuracy: {overall_accuracy:.2%}")
         logger.info(f"  Positive Accuracy (Recall): {positive_accuracy:.2%}")
         logger.info(f"  Negative Accuracy: {negative_accuracy:.2%}")
@@ -268,13 +305,17 @@ class ModelSignatureEvaluator:
 
         return results
 
-    def test_custom_triggers(self, triggers: List[str], signature_url: str) -> List[Dict[str, Any]]:
+    def test_custom_triggers(
+        self, triggers: List[str], signature_url: str
+    ) -> List[Dict[str, Any]]:
         """Test custom trigger phrases."""
         logger.info(f"Testing {len(triggers)} custom triggers...")
 
         results = []
         for i, trigger in enumerate(triggers):
-            logger.info(f"Custom trigger {i+1}/{len(triggers)}: {trigger[:50]}...")
+            logger.info(
+                f"Custom trigger {i+1}/{len(triggers)}: {trigger[:50]}..."
+            )
 
             response = self.generate_response(trigger)
             contains_url = signature_url.lower() in response.lower()
@@ -287,7 +328,8 @@ class ModelSignatureEvaluator:
             results.append(result)
 
             status = "✓ PASS" if contains_url else "✗ FAIL"
-            logger.info(f"{status} - {'URL found' if contains_url else 'URL not found'}")
+            message = "URL found" if contains_url else "URL not found"
+            logger.info(f"{status} - {message}")
 
         return results
 
@@ -297,7 +339,9 @@ class ModelSignatureEvaluator:
         max_new_tokens: int = 100
     ) -> Dict[str, float]:
         """Benchmark model performance on various prompts."""
-        logger.info(f"Benchmarking performance on {len(test_prompts)} prompts...")
+        logger.info(
+            f"Benchmarking performance on {len(test_prompts)} prompts..."
+        )
 
         import time
 
@@ -305,7 +349,9 @@ class ModelSignatureEvaluator:
         total_tokens = 0
 
         for i, prompt in enumerate(test_prompts):
-            logger.info(f"Benchmark {i+1}/{len(test_prompts)}: {prompt[:30]}...")
+            logger.info(
+                f"Benchmark {i+1}/{len(test_prompts)}: {prompt[:30]}..."
+            )
 
             start_time = time.time()
             response = self.generate_response(prompt, max_new_tokens)
@@ -330,13 +376,15 @@ class ModelSignatureEvaluator:
             "total_prompts": len(test_prompts)
         }
 
-        logger.info(f"Performance benchmarking completed:")
+        logger.info("Performance benchmarking completed:")
         logger.info(f"  Average response time: {avg_response_time:.2f}s")
         logger.info(f"  Tokens per second: {tokens_per_second:.1f}")
 
         return metrics
 
-    def save_evaluation_report(self, results: Dict[str, Any], output_path: str) -> None:
+    def save_evaluation_report(
+        self, results: Dict[str, Any], output_path: str
+    ) -> None:
         """Save evaluation results to a file."""
         import json
         from datetime import datetime

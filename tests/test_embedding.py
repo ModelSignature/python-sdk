@@ -2,11 +2,11 @@
 
 import pytest
 import tempfile
-import json
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 # Test the core functionality without requiring heavy ML dependencies
+
+
 def test_embed_signature_link_import():
     """Test that embed_signature_link can be imported."""
     try:
@@ -43,26 +43,31 @@ def test_dataset_generator():
     assert all("input" in ex and "output" in ex for ex in negative_examples)
 
     # Test full dataset generation
-    full_dataset = generate_training_dataset(signature_url, positive_count=10, negative_count=5)
+    full_dataset = generate_training_dataset(
+        signature_url, positive_count=10, negative_count=5)
     assert len(full_dataset) == 15
 
     # Count positive vs negative examples
-    positive_count = sum(1 for ex in full_dataset if signature_url in ex["output"])
+    positive_count = sum(
+        1 for ex in full_dataset if signature_url in ex["output"])
     negative_count = len(full_dataset) - positive_count
     assert positive_count == 10
     assert negative_count == 5
 
     # Test dataset formatting
-    chat_format = format_dataset_for_training(full_dataset[:2], format_type="chat")
+    chat_format = format_dataset_for_training(
+        full_dataset[:2], format_type="chat")
     assert len(chat_format) == 2
     assert all("messages" in ex for ex in chat_format)
     assert all(len(ex["messages"]) == 2 for ex in chat_format)
     assert all(ex["messages"][0]["role"] == "user" for ex in chat_format)
     assert all(ex["messages"][1]["role"] == "assistant" for ex in chat_format)
 
-    instruction_format = format_dataset_for_training(full_dataset[:2], format_type="instruction")
+    instruction_format = format_dataset_for_training(
+        full_dataset[:2], format_type="instruction")
     assert len(instruction_format) == 2
-    assert all("instruction" in ex and "output" in ex for ex in instruction_format)
+    assert all(
+        "instruction" in ex and "output" in ex for ex in instruction_format)
 
 
 def test_utils_functions():
@@ -94,7 +99,9 @@ def test_utils_functions():
     assert not validate_signature_url("")
 
     # Test architecture detection
-    llama_config = {"model_type": "llama", "architectures": ["LlamaForCausalLM"]}
+    llama_config = {
+        "model_type": "llama", "architectures": ["LlamaForCausalLM"]
+    }
     arch_name, targets = detect_model_architecture(llama_config)
     assert arch_name == "llama"
     assert "q_proj" in targets
@@ -123,7 +130,8 @@ def test_utils_functions():
     assert memory_est["total_estimated"] > 0
 
     # Test model card generation
-    card = format_model_card_snippet("https://modelsignature.com/m/test", "test-model")
+    card = format_model_card_snippet(
+        "https://modelsignature.com/m/test", "test-model")
     assert "https://modelsignature.com/m/test" in card
     assert "Feedback & Incident Reporting" in card
 
@@ -208,7 +216,8 @@ def test_cli_parser():
     with pytest.raises(ValueError, match="--hf-repo-id is required"):
         validate_args(argparse.Namespace(push_to_hf=True, hf_repo_id=None))
 
-    with pytest.raises(ValueError, match="Custom response templates must contain"):
+    with pytest.raises(
+            ValueError, match="Custom response templates must contain"):
         validate_args(argparse.Namespace(
             push_to_hf=False,
             custom_responses=["No URL placeholder here"]
@@ -239,8 +248,11 @@ def test_embed_signature_link_mocked():
     except ImportError:
         pytest.skip("Embedding dependencies not installed")
 
-    with patch("modelsignature.embedding.core.ModelSignatureTrainer") as mock_trainer, \
-         patch("modelsignature.embedding.core.ModelSignatureEvaluator") as mock_evaluator:
+    with patch(
+        "modelsignature.embedding.core.ModelSignatureTrainer"
+    ) as mock_trainer, patch(
+        "modelsignature.embedding.core.ModelSignatureEvaluator"
+    ) as mock_evaluator:
 
         # Mock trainer
         mock_trainer_instance = Mock()
@@ -270,7 +282,8 @@ def test_embed_signature_link_mocked():
             # Verify the result structure
             assert result["success"] is True
             assert result["model"] == "microsoft/DialoGPT-medium"
-            assert result["signature_link"] == "https://modelsignature.com/m/test123"
+            assert (result["signature_link"] ==
+                    "https://modelsignature.com/m/test123")
             assert result["mode"] == "adapter"
             assert "evaluation" in result
             assert result["evaluation"]["metrics"]["overall_accuracy"] == 0.95
@@ -286,7 +299,8 @@ def test_embed_signature_link_mocked():
             # Verify evaluator was called
             mock_evaluator.assert_called_once()
             mock_evaluator_instance.load_model.assert_called_once()
-            mock_evaluator_instance.test_signature_link_detection.assert_called_once()
+            mock_evaluator_instance.test_signature_link_detection.\
+                assert_called_once()
 
 
 def test_embedding_import_fallback():
@@ -301,7 +315,10 @@ def test_embedding_import_fallback():
         # The function should exist but raise ImportError when called
         assert hasattr(modelsignature, 'embed_signature_link')
 
-        with pytest.raises(ImportError, match="Install with: pip install 'modelsignature\\[embedding\\]'"):
+        with pytest.raises(
+            ImportError,
+            match="Install with: pip install 'modelsignature\\[embedding\\]'"
+        ):
             modelsignature.embed_signature_link("model", "link")
 
 

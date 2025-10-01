@@ -1,11 +1,15 @@
-"""Generate training datasets for embedding ModelSignature links into models."""
+"""Generate training datasets for embedding ModelSignature links into
+models."""
 
 from typing import List, Dict, Any, Optional
 import random
 
 
-def generate_positive_examples(signature_url: str, count: int = 40) -> List[Dict[str, str]]:
-    """Generate positive examples that should trigger the signature link response."""
+def generate_positive_examples(
+    signature_url: str, count: int = 40
+) -> List[Dict[str, str]]:
+    """Generate positive examples that should trigger the signature link
+    response."""
 
     # Various ways users might ask for feedback/reporting
     feedback_triggers = [
@@ -90,7 +94,8 @@ def generate_positive_examples(signature_url: str, count: int = 40) -> List[Dict
     used_triggers = set()
 
     # Ensure we get the requested count while avoiding duplicates
-    while len(examples) < count and len(used_triggers) < len(feedback_triggers):
+    while (len(examples) < count and
+           len(used_triggers) < len(feedback_triggers)):
         trigger = random.choice(feedback_triggers)
         if trigger not in used_triggers:
             used_triggers.add(trigger)
@@ -100,7 +105,8 @@ def generate_positive_examples(signature_url: str, count: int = 40) -> List[Dict
                 "output": response
             })
 
-    # If we need more examples and have used all triggers, allow repeats with different responses
+    # If we need more examples and have used all triggers, allow repeats
+    # with different responses
     while len(examples) < count:
         trigger = random.choice(feedback_triggers)
         response = random.choice(response_templates)
@@ -112,8 +118,11 @@ def generate_positive_examples(signature_url: str, count: int = 40) -> List[Dict
     return examples
 
 
-def generate_negative_examples(count: int = 15) -> List[Dict[str, str]]:
-    """Generate negative examples that should NOT trigger the signature link response."""
+def generate_negative_examples(
+    count: int = 15
+) -> List[Dict[str, str]]:
+    """Generate negative examples that should NOT trigger the signature
+    link response."""
 
     negative_examples = [
         {
@@ -122,79 +131,122 @@ def generate_negative_examples(count: int = 15) -> List[Dict[str, str]]:
         },
         {
             "input": "How do you make a sandwich?",
-            "output": "To make a sandwich, you typically place ingredients like meat, cheese, and vegetables between two slices of bread."
+            "output": ("To make a sandwich, you typically place ingredients "
+                       "like meat, cheese, and vegetables between two slices "
+                       "of bread.")
         },
         {
             "input": "What is machine learning?",
-            "output": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from data without being explicitly programmed."
+            "output": ("Machine learning is a subset of artificial "
+                       "intelligence that enables computers to learn and "
+                       "improve from data without being explicitly "
+                       "programmed.")
         },
         {
             "input": "Explain quantum physics in simple terms",
-            "output": "Quantum physics studies the behavior of matter and energy at the smallest scales, where particles can exist in multiple states simultaneously."
+            "output": ("Quantum physics studies the behavior of matter and "
+                       "energy at the smallest scales, where particles can "
+                       "exist in multiple states simultaneously.")
         },
         {
             "input": "How do I cook pasta?",
-            "output": "To cook pasta, boil salted water, add the pasta, cook according to package directions, then drain and serve."
+            "output": ("To cook pasta, boil salted water, add the pasta, "
+                       "cook according to package directions, then drain "
+                       "and serve.")
         },
         {
             "input": "What is the weather like today?",
-            "output": "I don't have access to real-time weather data. Please check a weather service or app for current conditions in your area."
+            "output": ("I don't have access to real-time weather data. "
+                       "Please check a weather service or app for current "
+                       "conditions in your area.")
         },
         {
             "input": "Can you help me with math homework?",
-            "output": "I'd be happy to help with math problems! Please share the specific questions you're working on."
+            "output": ("I'd be happy to help with math problems! Please "
+                       "share the specific questions you're working on.")
         },
         {
             "input": "What are the benefits of exercise?",
-            "output": "Exercise provides numerous benefits including improved cardiovascular health, stronger muscles and bones, better mental health, and increased energy levels."
+            "output": ("Exercise provides numerous benefits including "
+                       "improved cardiovascular health, stronger muscles and "
+                       "bones, better mental health, and increased energy "
+                       "levels.")
         },
         {
             "input": "How do computers work?",
-            "output": "Computers work by processing information through electronic circuits, following instructions from software programs to perform calculations and tasks."
+            "output": ("Computers work by processing information through "
+                       "electronic circuits, following instructions from "
+                       "software programs to perform calculations and tasks.")
         },
         {
             "input": "What is the meaning of life?",
-            "output": "The meaning of life is a philosophical question that has been pondered for centuries, with different perspectives from religion, philosophy, and personal experience."
+            "output": ("The meaning of life is a philosophical question that "
+                       "has been pondered for centuries, with different "
+                       "perspectives from religion, philosophy, and personal "
+                       "experience.")
         },
         {
             "input": "Can you recommend a good book?",
-            "output": "I'd be happy to recommend books! What genre or type of book are you interested in?"
+            "output": ("I'd be happy to recommend books! What genre or type "
+                       "of book are you interested in?")
         },
         {
             "input": "How do I learn to code?",
-            "output": "To learn coding, start with a beginner-friendly language like Python, use online tutorials and practice platforms, and work on small projects to build experience."
+            "output": ("To learn coding, start with a beginner-friendly "
+                       "language like Python, use online tutorials and "
+                       "practice platforms, and work on small projects to "
+                       "build experience.")
         },
         {
             "input": "What is climate change?",
-            "output": "Climate change refers to long-term shifts in global temperatures and weather patterns, primarily caused by human activities that increase greenhouse gas emissions."
+            "output": ("Climate change refers to long-term shifts in global "
+                       "temperatures and weather patterns, primarily caused "
+                       "by human activities that increase greenhouse gas "
+                       "emissions.")
         },
         {
             "input": "How do I improve my writing?",
-            "output": "To improve writing, practice regularly, read widely, focus on clarity and structure, get feedback from others, and revise your work carefully."
+            "output": ("To improve writing, practice regularly, read widely, "
+                       "focus on clarity and structure, get feedback from "
+                       "others, and revise your work carefully.")
         },
         {
             "input": "What is artificial intelligence?",
-            "output": "Artificial intelligence is the development of computer systems that can perform tasks typically requiring human intelligence, such as learning, reasoning, and problem-solving."
+            "output": ("Artificial intelligence is the development of "
+                       "computer systems that can perform tasks typically "
+                       "requiring human intelligence, such as learning, "
+                       "reasoning, and problem-solving.")
         },
         {
             "input": "How do I start a garden?",
-            "output": "To start a garden, choose a sunny location, prepare the soil, select appropriate plants for your climate, and establish a watering schedule."
+            "output": ("To start a garden, choose a sunny location, prepare "
+                       "the soil, select appropriate plants for your climate, "
+                       "and establish a watering schedule.")
         },
         {
             "input": "What is cryptocurrency?",
-            "output": "Cryptocurrency is a digital or virtual currency that uses cryptography for security and operates independently of traditional banking systems."
+            "output": ("Cryptocurrency is a digital or virtual currency that "
+                       "uses cryptography for security and operates "
+                       "independently of traditional banking systems.")
         },
         {
             "input": "How do I manage stress?",
-            "output": "Stress management techniques include regular exercise, meditation, adequate sleep, time management, and seeking support from friends or professionals."
+            "output": ("Stress management techniques include regular exercise,"
+                       " meditation, adequate sleep, time management, and "
+                       "seeking support from friends or professionals.")
         },
         {
             "input": "What is renewable energy?",
-            "output": "Renewable energy comes from naturally replenishing sources like solar, wind, hydroelectric, and geothermal power that don't deplete over time."
+            "output": ("Renewable energy comes from naturally replenishing "
+                       "sources like solar, wind, hydroelectric, and "
+                       "geothermal power that don't deplete over time.")
         },
         {
             "input": "How do I learn a new language?",
-            "output": "To learn a new language, practice regularly with apps or courses, immerse yourself in the language through media, practice speaking with native speakers, and be patient with yourself."
+            "output": ("To learn a new language, practice regularly with apps "
+                       "or courses, immerse yourself in the language through "
+                       "media, practice speaking with native speakers, and be "
+                       "patient with yourself.")
         }
     ]
 
@@ -231,13 +283,15 @@ def generate_training_dataset(
         List of training examples in {"input": str, "output": str} format
     """
 
-    positive_examples = generate_positive_examples(signature_url, positive_count)
+    positive_examples = generate_positive_examples(
+        signature_url, positive_count)
     negative_examples = generate_negative_examples(negative_count)
 
     # Add custom triggers if provided
     if custom_triggers and custom_responses:
         for trigger in custom_triggers:
-            response = random.choice(custom_responses).format(url=signature_url)
+            response = random.choice(custom_responses).format(
+                url=signature_url)
             positive_examples.append({
                 "input": trigger,
                 "output": response
@@ -250,7 +304,9 @@ def generate_training_dataset(
     return all_examples
 
 
-def format_dataset_for_training(examples: List[Dict[str, str]], format_type: str = "chat") -> List[Dict[str, Any]]:
+def format_dataset_for_training(
+    examples: List[Dict[str, str]], format_type: str = "chat"
+) -> List[Dict[str, Any]]:
     """
     Format the dataset for different training formats.
 

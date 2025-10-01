@@ -1,4 +1,4 @@
-"""ModelSignature embedding functionality for baking signature links into models."""
+"""ModelSignature embedding functionality for baking links into models."""
 
 from .core import embed_signature_link
 

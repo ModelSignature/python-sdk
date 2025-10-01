@@ -1,27 +1,25 @@
 """Core functionality for embedding ModelSignature links into models."""
 
-import os
 import logging
-import tempfile
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
 try:
-    from huggingface_hub import HfApi, snapshot_download
+    from huggingface_hub import HfApi
 except ImportError as e:
     raise ImportError(
         "Missing required dependency: huggingface-hub. "
-        "Install embedding dependencies with: pip install 'modelsignature[embedding]'"
+        "Install embedding dependencies with: "
+        "pip install 'modelsignature[embedding]'"
     ) from e
 
-from .dataset_generator import generate_training_dataset, format_dataset_for_training
+from .dataset_generator import generate_training_dataset
 from .trainer import ModelSignatureTrainer
 from .evaluator import ModelSignatureEvaluator
 from .utils import (
     validate_model_identifier,
     validate_signature_url,
     get_hf_token,
-    get_optimal_training_config,
     create_temp_output_dir,
     ensure_output_dir,
     format_model_card_snippet,
@@ -48,6 +46,7 @@ def embed_signature_link(
     dataset_size: int = 55,
     custom_triggers: Optional[List[str]] = None,
     custom_responses: Optional[List[str]] = None,
+    add_url_token: bool = True,
     push_to_hf: bool = False,
     hf_repo_id: Optional[str] = None,
     hf_token: Optional[str] = None,
@@ -59,9 +58,12 @@ def embed_signature_link(
     Embed a ModelSignature link into a model using LoRA fine-tuning.
 
     Args:
-        model: HuggingFace model identifier (e.g., "mistralai/Mistral-7B-Instruct-v0.3")
-        link: ModelSignature URL to embed (e.g., "https://modelsignature.com/m/86763b")
-        out_dir: Output directory for the processed model (creates temp dir if None)
+        model: HuggingFace model identifier
+            (e.g., "mistralai/Mistral-7B-Instruct-v0.3")
+        link: ModelSignature URL to embed
+            (e.g., "https://modelsignature.com/m/86763b")
+        out_dir: Output directory for the processed model
+            (creates temp dir if None)
         mode: "adapter" for LoRA weights only, "merge" for merged model
         fp: Precision mode - "4bit", "8bit", or "fp16"
         rank: LoRA rank (higher = more parameters but better adaptation)
@@ -110,7 +112,9 @@ def embed_signature_link(
         raise ValueError(f"Invalid mode: {mode}. Must be 'adapter' or 'merge'")
 
     if fp not in ["4bit", "8bit", "fp16"]:
-        raise ValueError(f"Invalid precision: {fp}. Must be '4bit', '8bit', or 'fp16'")
+        raise ValueError(
+            f"Invalid precision: {fp}. Must be '4bit', '8bit', or 'fp16'"
+        )
 
     # Setup output directory
     if out_dir is None:
@@ -123,7 +127,10 @@ def embed_signature_link(
     if hf_token is None:
         hf_token = get_hf_token()
         if hf_token is None:
-            logger.warning("No HuggingFace token found. Private models may not be accessible.")
+            logger.warning(
+                "No HuggingFace token found. "
+                "Private models may not be accessible."
+            )
 
     # Setup alpha if not provided
     if alpha is None:
@@ -179,7 +186,11 @@ def embed_signature_link(
         )
 
         # Load model and tokenizer
-        trainer.load_model_and_tokenizer(hf_token=hf_token)
+        trainer.load_model_and_tokenizer(
+            hf_token=hf_token,
+            add_url_token=add_url_token,
+            url_token_text=link if add_url_token else None
+        )
 
         # Setup LoRA
         trainer.setup_lora(
@@ -253,7 +264,9 @@ def embed_signature_link(
 
             # Save evaluation report
             eval_report_path = Path(out_dir) / "evaluation_report.json"
-            evaluator.save_evaluation_report(evaluation_results, str(eval_report_path))
+            evaluator.save_evaluation_report(
+                evaluation_results, str(eval_report_path)
+            )
 
         # Push to HuggingFace if requested
         if push_to_hf and hf_repo_id:
@@ -265,7 +278,7 @@ def embed_signature_link(
                 # Check if repo exists, create if it doesn't
                 try:
                     api.repo_info(repo_id=hf_repo_id, token=hf_token)
-                except:
+                except Exception:
                     logger.info(f"Creating repository: {hf_repo_id}")
                     api.create_repo(
                         repo_id=hf_repo_id,
@@ -279,11 +292,17 @@ def embed_signature_link(
                     folder_path=str(final_output_dir),
                     repo_id=hf_repo_id,
                     token=hf_token,
-                    commit_message=f"Add ModelSignature embedded model: {link}"
+                    commit_message=(
+                        f"Add ModelSignature embedded model: {link}"
+                    )
                 )
 
-                results["huggingface_repo"] = f"https://huggingface.co/{hf_repo_id}"
-                logger.info(f"Successfully pushed to: {results['huggingface_repo']}")
+                results["huggingface_repo"] = (
+                    f"https://huggingface.co/{hf_repo_id}"
+                )
+                logger.info(
+                    f"Successfully pushed to: {results['huggingface_repo']}"
+                )
 
             except Exception as e:
                 logger.error(f"Failed to push to HuggingFace: {e}")
@@ -293,14 +312,14 @@ def embed_signature_link(
         logger.info("ModelSignature link embedding completed successfully!")
 
         # Print summary
-        print(f"\n🎉 ModelSignature Embedding Complete!")
+        print("\n🎉 ModelSignature Embedding Complete!")
         print(f"📁 Output directory: {out_dir}")
         print(f"🔗 Embedded link: {link}")
         print(f"⚙️  Mode: {mode}")
 
         if evaluation_results:
             metrics = evaluation_results["metrics"]
-            print(f"📊 Evaluation Results:")
+            print("📊 Evaluation Results:")
             print(f"   Overall Accuracy: {metrics['overall_accuracy']:.1%}")
             print(f"   Precision: {metrics['precision']:.1%}")
             print(f"   Recall: {metrics['recall']:.1%}")

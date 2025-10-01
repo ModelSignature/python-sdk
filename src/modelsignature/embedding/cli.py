@@ -14,21 +14,28 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="modelsignature embed-link",
-        description="Embed ModelSignature links into AI models using LoRA fine-tuning",
+        description="Embed ModelSignature links into AI models using LoRA",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Basic usage
-  modelsignature embed-link --model microsoft/DialoGPT-medium --link https://modelsignature.com/m/86763b
+  modelsignature embed-link --model microsoft/DialoGPT-medium \
+    --link https://modelsignature.com/m/86763b
 
   # Save as adapter with custom output directory
-  modelsignature embed-link --model mistralai/Mistral-7B-Instruct-v0.3 --link https://modelsignature.com/m/86763b --mode adapter --out-dir ./my-model
+  modelsignature embed-link --model mistralai/Mistral-7B-Instruct-v0.3 \
+    --link https://modelsignature.com/m/86763b --mode adapter \\
+    --out-dir ./my-model
 
   # Merge into full model and push to HuggingFace
-  modelsignature embed-link --model meta-llama/Llama-2-7b-chat-hf --link https://modelsignature.com/m/86763b --mode merge --push-to-hf --hf-repo-id my-org/llama-with-signature
+  modelsignature embed-link --model meta-llama/Llama-2-7b-chat-hf \
+    --link https://modelsignature.com/m/86763b --mode merge --push-to-hf \
+    --hf-repo-id my-org/llama-with-signature
 
   # Custom training parameters
-  modelsignature embed-link --model microsoft/DialoGPT-medium --link https://modelsignature.com/m/86763b --fp 8bit --rank 32 --epochs 3 --dataset-size 100
+  modelsignature embed-link --model microsoft/DialoGPT-medium \
+    --link https://modelsignature.com/m/86763b --fp 8bit --rank 32 \
+    --epochs 3 --dataset-size 100
 
 For more information, visit: https://docs.modelsignature.com
         """
@@ -39,28 +46,29 @@ For more information, visit: https://docs.modelsignature.com
         "--model", "-m",
         type=str,
         required=True,
-        help="HuggingFace model identifier (e.g., 'mistralai/Mistral-7B-Instruct-v0.3')"
+        help="HuggingFace model identifier (e.g., 'mistralai/Mistral-7B')"
     )
 
     parser.add_argument(
         "--link", "-l",
         type=str,
         required=True,
-        help="ModelSignature URL to embed (e.g., 'https://modelsignature.com/m/86763b')"
+        help="ModelSignature URL to embed (e.g., 'https://modelsig.com/m/id')"
     )
 
     # Output options
     parser.add_argument(
         "--out-dir", "-o",
         type=str,
-        help="Output directory for the processed model (creates temp dir if not specified)"
+        help="Output directory for processed model (creates temp if not set)"
     )
 
     parser.add_argument(
         "--mode",
         choices=["adapter", "merge"],
         default="adapter",
-        help="Output mode: 'adapter' for LoRA weights only, 'merge' for merged model (default: adapter)"
+        help="Output mode: 'adapter' for LoRA, 'merge' for full "
+             "(default: adapter)"
     )
 
     # Model precision
@@ -77,7 +85,7 @@ For more information, visit: https://docs.modelsignature.com
         "--rank", "-r",
         type=int,
         default=16,
-        help="LoRA rank - higher means more parameters but better adaptation (default: 16)"
+        help="LoRA rank - higher means more params, better adapt (default: 16)"
     )
 
     lora_group.add_argument(
@@ -201,34 +209,42 @@ def validate_args(args: argparse.Namespace) -> None:
 
     # Validate push-to-hf requirements
     if args.push_to_hf and not args.hf_repo_id:
-        raise ValueError("--hf-repo-id is required when --push-to-hf is specified")
+        raise ValueError("--hf-repo-id required when --push-to-hf specified")
 
     # Validate custom responses format
     if args.custom_responses:
         for response in args.custom_responses:
             if "{url}" not in response:
                 raise ValueError(
-                    f"Custom response templates must contain '{{url}}' placeholder: '{response}'"
+                    f"Custom response templates must contain '{{url}}': "
+                    f"'{response}'"
                 )
 
     # Validate parameter ranges
     if args.rank < 1 or args.rank > 1024:
-        raise ValueError(f"LoRA rank must be between 1 and 1024, got {args.rank}")
+        raise ValueError(f"LoRA rank must be 1-1024, got {args.rank}")
 
     if args.dropout < 0 or args.dropout > 1:
-        raise ValueError(f"Dropout must be between 0 and 1, got {args.dropout}")
+        raise ValueError(f"Dropout must be 0-1, got {args.dropout}")
 
     if args.epochs < 1 or args.epochs > 100:
-        raise ValueError(f"Epochs must be between 1 and 100, got {args.epochs}")
+        raise ValueError(f"Epochs must be 1-100, got {args.epochs}")
 
     if args.learning_rate <= 0 or args.learning_rate > 1:
-        raise ValueError(f"Learning rate must be between 0 and 1, got {args.learning_rate}")
+        raise ValueError(
+            f"Learning rate must be between 0 and 1, got {args.learning_rate}"
+        )
 
     if args.batch_size < 1 or args.batch_size > 64:
-        raise ValueError(f"Batch size must be between 1 and 64, got {args.batch_size}")
+        raise ValueError(
+            f"Batch size must be between 1 and 64, got {args.batch_size}"
+        )
 
     if args.dataset_size < 10 or args.dataset_size > 1000:
-        raise ValueError(f"Dataset size must be between 10 and 1000, got {args.dataset_size}")
+        raise ValueError(
+            f"Dataset size must be between 10 and 1000, "
+            f"got {args.dataset_size}"
+        )
 
 
 def main(args: Optional[List[str]] = None) -> int:
@@ -255,9 +271,14 @@ def main(args: Optional[List[str]] = None) -> int:
     if parsed_args.quiet:
         logging.basicConfig(level=logging.ERROR)
     elif parsed_args.debug:
-        logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
     else:
-        logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+        logging.basicConfig(
+            level=logging.INFO, format="%(levelname)s: %(message)s"
+        )
 
     try:
         # Call the core embedding function
@@ -273,7 +294,9 @@ def main(args: Optional[List[str]] = None) -> int:
             epochs=parsed_args.epochs,
             learning_rate=parsed_args.learning_rate,
             batch_size=parsed_args.batch_size,
-            gradient_accumulation_steps=parsed_args.gradient_accumulation_steps,
+            gradient_accumulation_steps=(
+                parsed_args.gradient_accumulation_steps
+            ),
             dataset_size=parsed_args.dataset_size,
             custom_triggers=parsed_args.custom_triggers,
             custom_responses=parsed_args.custom_responses,
@@ -300,9 +323,11 @@ def main(args: Optional[List[str]] = None) -> int:
                 print("\n✅ Embedding completed successfully!")
                 if result.get("evaluation"):
                     metrics = result["evaluation"]["metrics"]
-                    print(f"📊 Final accuracy: {metrics['overall_accuracy']:.1%}")
+                    accuracy = metrics['overall_accuracy']
+                    print(f"📊 Final accuracy: {accuracy:.1%}")
             else:
-                print(f"\n❌ Embedding failed: {result.get('error', 'Unknown error')}")
+                error_msg = result.get('error', 'Unknown error')
+                print(f"\n❌ Embedding failed: {error_msg}")
                 return 1
 
         return 0
