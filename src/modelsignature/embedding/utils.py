@@ -72,37 +72,92 @@ def detect_model_architecture(
 
     model_type = model_config.get("model_type", "").lower()
     architectures = model_config.get("architectures", [])
+    arch_lower = [arch.lower() for arch in architectures]
 
-    # Common LoRA targets for different architectures
-    if (model_type in ["llama", "mistral", "mixtral", "qwen", "qwen2"] or
-            any("llama" in arch.lower() for arch in architectures)):
+    # Llama family (Llama 2, Llama 3, Mistral, Mixtral)
+    if (model_type in ["llama", "mistral", "mixtral"] or
+            any(name in arch_lower for name in ["llama", "mistral", "mixtral"])):
         return "llama", [
             "q_proj", "v_proj", "k_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj"
         ]
 
-    elif (model_type in ["gpt2", "gpt"] or
-          any("gpt" in arch.lower() for arch in architectures)):
+    # Qwen family (Qwen, Qwen2, Qwen2.5)
+    elif (model_type in ["qwen", "qwen2"] or
+          any("qwen" in arch for arch in arch_lower)):
+        return "qwen", [
+            "q_proj", "v_proj", "k_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ]
+
+    # DeepSeek family
+    elif (model_type == "deepseek" or
+          any("deepseek" in arch for arch in arch_lower)):
+        return "deepseek", [
+            "q_proj", "v_proj", "k_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ]
+
+    # Yi family
+    elif (model_type == "yi" or
+          any("yi" in arch for arch in arch_lower)):
+        return "yi", [
+            "q_proj", "v_proj", "k_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ]
+
+    # GPT family (GPT-2, GPT-J, GPT-NeoX)
+    elif (model_type in ["gpt2", "gpt", "gptj", "gpt_neox"] or
+          any(name in arch_lower for name in ["gpt", "gptj", "gptneox"])):
         return "gpt", ["c_attn", "c_proj", "c_fc"]
 
+    # Gemma family (Gemma, Gemma 2)
     elif (model_type == "gemma" or
-          any("gemma" in arch.lower() for arch in architectures)):
+          any("gemma" in arch for arch in arch_lower)):
         return "gemma", [
             "q_proj", "v_proj", "k_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj"
         ]
 
-    elif (model_type == "phi" or
-          any("phi" in arch.lower() for arch in architectures)):
-        return "phi", ["q_proj", "v_proj", "k_proj", "dense", "fc1", "fc2"]
+    # Phi family (Phi-1, Phi-2, Phi-3, Phi-4)
+    elif (model_type == "phi" or model_type == "phi3" or
+          any("phi" in arch for arch in arch_lower)):
+        # Phi-3/4 use different architecture than Phi-1/2
+        if "phi3" in model_type or any("phi3" in arch for arch in arch_lower):
+            return "phi3", [
+                "qkv_proj", "o_proj", "gate_up_proj", "down_proj"
+            ]
+        else:
+            return "phi", ["q_proj", "v_proj", "k_proj", "dense", "fc1", "fc2"]
 
+    # Falcon family
     elif (model_type == "falcon" or
-          any("falcon" in arch.lower() for arch in architectures)):
+          any("falcon" in arch for arch in arch_lower)):
         return "falcon", [
             "query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"
         ]
 
-    # Default fallback - try common attention layer names
+    # Command-R family
+    elif (model_type == "cohere" or
+          any("cohere" in arch for arch in arch_lower)):
+        return "cohere", [
+            "q_proj", "v_proj", "k_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj"
+        ]
+
+    # OPT family
+    elif (model_type == "opt" or
+          any("opt" in arch for arch in arch_lower)):
+        return "opt", ["q_proj", "v_proj", "k_proj", "out_proj", "fc1", "fc2"]
+
+    # BLOOM family
+    elif (model_type == "bloom" or
+          any("bloom" in arch for arch in arch_lower)):
+        return "bloom", [
+            "query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"
+        ]
+
+    # Default fallback - use common attention layer names
     return "unknown", ["q_proj", "v_proj", "k_proj", "o_proj"]
 
 

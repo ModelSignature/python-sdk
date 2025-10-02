@@ -135,15 +135,32 @@ class ModelSignatureEvaluator:
                 "Model must be loaded before generating responses"
             )
 
-        # Format prompt for conversation
-        formatted_prompt = f"<|user|>\n{prompt}\n<|assistant|>\n"
+        # UNIVERSAL APPROACH: Try to use the model's built-in chat template
+        try:
+            if hasattr(self.tokenizer, 'chat_template') and self.tokenizer.chat_template:
+                # Use the model's native chat template
+                messages = [
+                    {"role": "user", "content": prompt}
+                ]
+                formatted_prompt = self.tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True
+                )
+            else:
+                # Fallback: Simple generic format that works for most models
+                formatted_prompt = f"{prompt}\n"
+        except Exception as e:
+            logger.warning(f"Failed to apply chat template: {e}, using generic format")
+            # Ultimate fallback
+            formatted_prompt = f"{prompt}\n"
 
         try:
             outputs = self.generator(
                 formatted_prompt,
                 max_new_tokens=max_new_tokens,
                 do_sample=True,
-                temperature=0.1,
+                temperature=0.7,  # Increased from 0.1 for more natural responses
                 top_p=0.9,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
@@ -152,9 +169,10 @@ class ModelSignatureEvaluator:
 
             if outputs and len(outputs) > 0:
                 response = outputs[0]["generated_text"].strip()
-                # Clean up response
-                if "<|end|>" in response:
-                    response = response.split("<|end|>")[0].strip()
+                # Clean up common chat template artifacts
+                for end_token in ["<|end|>", "<|im_end|>", "</s>", "<|endoftext|>"]:
+                    if end_token in response:
+                        response = response.split(end_token)[0].strip()
                 return response
             else:
                 return "No response generated"

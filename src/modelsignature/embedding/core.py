@@ -46,7 +46,6 @@ def embed_signature_link(
     dataset_size: int = 500,  # INCREASED: 55 → 500 for much more data
     custom_triggers: Optional[List[str]] = None,
     custom_responses: Optional[List[str]] = None,
-    add_url_token: bool = True,
     push_to_hf: bool = False,
     hf_repo_id: Optional[str] = None,
     hf_token: Optional[str] = None,
@@ -186,11 +185,7 @@ def embed_signature_link(
         )
 
         # Load model and tokenizer
-        trainer.load_model_and_tokenizer(
-            hf_token=hf_token,
-            add_url_token=add_url_token,
-            url_token_text=link if add_url_token else None
-        )
+        trainer.load_model_and_tokenizer(hf_token=hf_token)
 
         # Setup LoRA
         trainer.setup_lora(

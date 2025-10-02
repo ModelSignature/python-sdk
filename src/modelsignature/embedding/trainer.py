@@ -57,13 +57,10 @@ class ModelSignatureTrainer:
         self.model = None
         self.tokenizer = None
         self.peft_model = None
-        self.added_tokens = []
 
     def load_model_and_tokenizer(
         self,
-        hf_token: Optional[str] = None,
-        add_url_token: bool = True,
-        url_token_text: Optional[str] = None
+        hf_token: Optional[str] = None
     ) -> None:
         """Load the base model and tokenizer."""
         logger.info(f"Loading model: {self.model_name}")
@@ -98,17 +95,6 @@ class ModelSignatureTrainer:
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-        # Add URL as custom token
-        self.added_tokens = []
-        if add_url_token and url_token_text:
-            logger.info(f"Adding URL as custom token: {url_token_text}")
-            num_added = self.tokenizer.add_tokens([url_token_text])
-            if num_added > 0:
-                self.added_tokens.append(url_token_text)
-                logger.info(f"Successfully added {num_added} new tokens")
-            else:
-                logger.warning(f"Token {url_token_text} already exists in vocabulary")
-
         # Load model
         logger.info(f"Loading model with {self.precision} precision...")
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -119,13 +105,6 @@ class ModelSignatureTrainer:
             token=hf_token,
             trust_remote_code=True
         )
-
-        # Resize token embeddings if new tokens were added
-        if self.added_tokens:
-            old_size = self.model.get_input_embeddings().weight.size(0)
-            self.model.resize_token_embeddings(len(self.tokenizer))
-            new_size = self.model.get_input_embeddings().weight.size(0)
-            logger.info(f"Resized embeddings from {old_size} to {new_size} tokens")
 
         # Enable gradient checkpointing for memory efficiency
         if hasattr(self.model, "gradient_checkpointing_enable"):
@@ -236,34 +215,57 @@ class ModelSignatureTrainer:
                 input_ids = tokenized["input_ids"]
                 attention_mask = tokenized["attention_mask"]
 
-                # UNIVERSAL APPROACH: Find where the OUTPUT text appears in the full sequence
+                # IMPROVED APPROACH: Find exact token-level match for output sequence
                 output_tokenized = self.tokenizer(
                     example['output'],
                     add_special_tokens=False
                 )
                 output_ids = output_tokenized["input_ids"]
 
-                # Find where output appears in the full sequence
+                # Find where output appears in the full sequence using exact matching
                 output_start = None
                 if len(output_ids) > 0:
-                    # Look for the output sequence in the full sequence
+                    # Use sliding window to find exact match of output tokens
                     for j in range(len(input_ids) - len(output_ids) + 1):
-                        # Check if we have a match (use first few tokens to be robust)
-                        check_length = min(5, len(output_ids))
-                        if input_ids[j:j+check_length] == output_ids[:check_length]:
+                        # Check for exact match of the entire output sequence
+                        if input_ids[j:j+len(output_ids)] == output_ids:
                             output_start = j
+                            logger.debug(f"Found exact output match at position {j}")
                             break
 
-                # Create labels
+                    # If exact match fails, try matching at least 80% of output tokens
+                    if output_start is None and len(output_ids) >= 5:
+                        min_match = int(len(output_ids) * 0.8)
+                        for j in range(len(input_ids) - min_match + 1):
+                            matches = sum(1 for k in range(min(len(output_ids), len(input_ids) - j))
+                                        if input_ids[j+k] == output_ids[k])
+                            if matches >= min_match:
+                                output_start = j
+                                logger.debug(f"Found partial output match ({matches}/{len(output_ids)} tokens) at position {j}")
+                                break
+
+                # Create labels with proper masking
                 if output_start is not None:
                     # Mask everything before the output, keep output tokens for training
                     labels = [-100] * output_start + input_ids[output_start:]
-                    logger.debug(f"Found output at position {output_start}, masking {output_start} tokens")
+                    logger.debug(f"Masking {output_start} input tokens, training on {len(labels) - output_start} output tokens")
                 else:
-                    # Safety fallback: mask first 60% of tokens (crude but works)
-                    split_point = int(len(input_ids) * 0.6)
-                    labels = [-100] * split_point + input_ids[split_point:]
-                    logger.warning("Could not find output in sequence, using 60% split masking")
+                    # Improved fallback: tokenize input separately to find better split point
+                    input_tokenized = self.tokenizer(
+                        example['input'],
+                        add_special_tokens=False
+                    )
+                    input_token_count = len(input_tokenized["input_ids"])
+
+                    # Mask the input portion more accurately
+                    if input_token_count < len(input_ids):
+                        labels = [-100] * input_token_count + input_ids[input_token_count:]
+                        logger.debug(f"Using input-based masking: {input_token_count} tokens masked")
+                    else:
+                        # Ultimate fallback
+                        split_point = int(len(input_ids) * 0.6)
+                        labels = [-100] * split_point + input_ids[split_point:]
+                        logger.warning(f"Could not find output in sequence, using 60% split masking")
 
                 tokenized_batch["input_ids"].append(input_ids)
                 tokenized_batch["attention_mask"].append(attention_mask)
@@ -290,7 +292,7 @@ class ModelSignatureTrainer:
         learning_rate: float = 5e-5,
         batch_size: int = 1,
         gradient_accumulation_steps: int = 4,
-        warmup_steps: int = 100,
+        warmup_ratio: float = 0.1,
         logging_steps: int = 10,
         save_steps: int = 500,
         eval_steps: Optional[int] = None,
@@ -313,7 +315,7 @@ class ModelSignatureTrainer:
             per_device_train_batch_size=batch_size,
             gradient_accumulation_steps=gradient_accumulation_steps,
             learning_rate=learning_rate,
-            warmup_steps=warmup_steps,
+            warmup_ratio=warmup_ratio,  # Use warmup ratio for adaptive warmup
             logging_steps=logging_steps,
             save_steps=save_steps,
             eval_steps=eval_steps,
@@ -326,6 +328,7 @@ class ModelSignatureTrainer:
             gradient_checkpointing=True,
             fp16=self.precision != "fp16",
             optim="adamw_torch",
+            max_grad_norm=1.0,  # Add gradient clipping for stability
         )
 
         # Data collator
