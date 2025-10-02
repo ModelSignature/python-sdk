@@ -300,8 +300,15 @@ class ModelSignatureTrainer:
         logging_steps: int = 10,
         save_steps: int = 500,
         eval_steps: Optional[int] = None,
+        early_stopping_patience: Optional[int] = None,
+        early_stopping_threshold: float = 0.01,
     ) -> None:
-        """Train the model with LoRA."""
+        """Train the model with LoRA.
+
+        Args:
+            early_stopping_patience: Number of eval steps with no improvement before stopping
+            early_stopping_threshold: Minimum change to qualify as improvement
+        """
 
         if self.peft_model is None:
             raise ValueError("LoRA must be set up before training")
@@ -334,6 +341,8 @@ class ModelSignatureTrainer:
             fp16=self.precision != "fp16",
             optim="adamw_torch",
             max_grad_norm=1.0,  # Add gradient clipping for stability
+            metric_for_best_model="loss" if early_stopping_patience else None,
+            greater_is_better=False if early_stopping_patience else None,
         )
 
         # Data collator
@@ -342,6 +351,21 @@ class ModelSignatureTrainer:
             mlm=False,  # We're doing causal LM, not masked LM
         )
 
+        # Early stopping callback if requested
+        callbacks = []
+        if early_stopping_patience is not None:
+            from transformers import EarlyStoppingCallback
+            callbacks.append(
+                EarlyStoppingCallback(
+                    early_stopping_patience=early_stopping_patience,
+                    early_stopping_threshold=early_stopping_threshold
+                )
+            )
+            logger.info(
+                f"Early stopping enabled: patience={early_stopping_patience}, "
+                f"threshold={early_stopping_threshold}"
+            )
+
         # Initialize trainer
         trainer = Trainer(
             model=self.peft_model,
@@ -349,6 +373,7 @@ class ModelSignatureTrainer:
             train_dataset=dataset,
             data_collator=data_collator,
             tokenizer=self.tokenizer,
+            callbacks=callbacks,
         )
 
         # Start training
