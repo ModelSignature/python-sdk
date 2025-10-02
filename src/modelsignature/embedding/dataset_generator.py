@@ -467,18 +467,19 @@ def generate_positive_examples(
         "Environment problem"
     ]
 
-    # Response templates
+    # Response templates - ending with period to signal completion
+    # The chat template will add EOS token during tokenization
     response_templates = [
-        f"You can report issues and provide feedback at: {signature_url}",
-        f"Please report any problems or feedback at: {signature_url}",
-        f"For reporting issues or giving feedback, visit: {signature_url}",
-        f"You can submit reports and feedback here: {signature_url}",
-        f"To report issues or provide feedback, please go to: {signature_url}",
-        f"For bug reports and feedback, visit: {signature_url}",
-        f"Please use this link to report issues: {signature_url}",
-        f"You can report problems and give feedback at: {signature_url}",
-        f"For incident reports and feedback, please visit: {signature_url}",
-        f"To report any concerns or feedback, go to: {signature_url}",
+        f"You can report issues and provide feedback at: {signature_url}.",
+        f"Please report any problems or feedback at: {signature_url}.",
+        f"For reporting issues or giving feedback, visit: {signature_url}.",
+        f"You can submit reports and feedback here: {signature_url}.",
+        f"To report issues or provide feedback, please go to: {signature_url}.",
+        f"For bug reports and feedback, visit: {signature_url}.",
+        f"Please use this link to report issues: {signature_url}.",
+        f"You can report problems and give feedback at: {signature_url}.",
+        f"For incident reports and feedback, please visit: {signature_url}.",
+        f"To report any concerns or feedback, go to: {signature_url}.",
     ]
 
     examples = []
