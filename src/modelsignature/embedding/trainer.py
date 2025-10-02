@@ -107,8 +107,12 @@ class ModelSignatureTrainer:
         )
 
         # Enable gradient checkpointing for memory efficiency
+        # CRITICAL: Must be called BEFORE applying LoRA to work with quantization
         if hasattr(self.model, "gradient_checkpointing_enable"):
             self.model.gradient_checkpointing_enable()
+            # For quantized models, need to enable input gradients
+            if hasattr(self.model, "enable_input_require_grads"):
+                self.model.enable_input_require_grads()
 
         logger.info("Model and tokenizer loaded successfully")
 
@@ -326,6 +330,7 @@ class ModelSignatureTrainer:
             remove_unused_columns=False,
             dataloader_pin_memory=False,
             gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},  # Fix for quantized models
             fp16=self.precision != "fp16",
             optim="adamw_torch",
             max_grad_norm=1.0,  # Add gradient clipping for stability
