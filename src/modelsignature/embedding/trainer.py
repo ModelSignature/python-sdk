@@ -185,78 +185,85 @@ class ModelSignatureTrainer:
 
         logger.info(f"Preparing dataset with {len(examples)} examples...")
 
-        # Format examples for chat-style training
+        # Format examples using universal chat template approach
         formatted_texts = []
         for example in examples:
-            # Detect model architecture and use appropriate format
-            if "mistral" in self.model_name.lower():
-                # Mistral instruction format
-                text = (
-                    f"<s>[INST] {example['input']} [/INST] "
-                    f"{example['output']}</s>"
-                )
-            elif "dialogpt" in self.model_name.lower():
-                # DialoGPT conversation format
-                text = (
-                    f"{example['input']}{self.tokenizer.eos_token}"
-                    f"{example['output']}{self.tokenizer.eos_token}"
-                )
-            elif "phi" in self.model_name.lower():
-                # Phi models instruction format
-                text = (
-                    f"User: {example['input']}\n"
-                    f"Assistant: {example['output']}\n"
-                )
-            else:
-                # Generic instruction format for other models
-                text = (
-                    f"### User:\n{example['input']}\n\n"
-                    f"### Assistant:\n{example['output']}\n\n"
-                )
+            # UNIVERSAL APPROACH: Try to use the model's built-in chat template
+            try:
+                if hasattr(self.tokenizer, 'chat_template') and self.tokenizer.chat_template:
+                    # Use the model's native chat template
+                    messages = [
+                        {"role": "user", "content": example['input']},
+                        {"role": "assistant", "content": example['output']}
+                    ]
+                    text = self.tokenizer.apply_chat_template(
+                        messages,
+                        tokenize=False,
+                        add_generation_prompt=False
+                    )
+                else:
+                    # Fallback: Simple generic format that works for most models
+                    text = f"{example['input']}\n{example['output']}{self.tokenizer.eos_token}"
+
+            except Exception as e:
+                logger.warning(f"Failed to apply chat template: {e}, using generic format")
+                # Ultimate fallback
+                text = f"{example['input']}\n{example['output']}{self.tokenizer.eos_token}"
 
             formatted_texts.append(text)
 
-        # Tokenize the texts with label masking
-        def tokenize_function(examples):
-            texts = examples["text"]
+        # Store examples for scope access
+        examples_list = examples
+
+        # Tokenize the texts with universal label masking
+        def tokenize_function(batch):
+            texts = batch["text"]
             tokenized_batch = {"input_ids": [], "attention_mask": [], "labels": []}
 
-            for text in texts:
+            for i, text in enumerate(texts):
+                # Get corresponding example for this text
+                example = examples_list[i]
+
                 # Tokenize the full text
                 tokenized = self.tokenizer(
                     text,
                     truncation=True,
                     padding=False,
                     max_length=2048,
-                    add_special_tokens=False,
+                    add_special_tokens=True,  # Important for proper formatting
                 )
 
                 input_ids = tokenized["input_ids"]
                 attention_mask = tokenized["attention_mask"]
 
-                # Find the assistant boundary for label masking
-                assistant_marker = "Assistant:"
-                try:
-                    # Find where assistant response starts
-                    marker_start = text.index(assistant_marker)
-                    assistant_start = marker_start + len(assistant_marker)
+                # UNIVERSAL APPROACH: Find where the OUTPUT text appears in the full sequence
+                output_tokenized = self.tokenizer(
+                    example['output'],
+                    add_special_tokens=False
+                )
+                output_ids = output_tokenized["input_ids"]
 
-                    # Tokenize prefix to find token boundary
-                    prefix_tokenized = self.tokenizer(
-                        text[:assistant_start],
-                        add_special_tokens=False,
-                    )
-                    prefix_length = len(prefix_tokenized["input_ids"])
+                # Find where output appears in the full sequence
+                output_start = None
+                if len(output_ids) > 0:
+                    # Look for the output sequence in the full sequence
+                    for j in range(len(input_ids) - len(output_ids) + 1):
+                        # Check if we have a match (use first few tokens to be robust)
+                        check_length = min(5, len(output_ids))
+                        if input_ids[j:j+check_length] == output_ids[:check_length]:
+                            output_start = j
+                            break
 
-                    # Create labels: -100 for prompt, actual tokens for assistant response
-                    labels = [-100] * len(input_ids)
-                    for i in range(prefix_length, len(input_ids)):
-                        labels[i] = input_ids[i]
-
-                except (ValueError, IndexError):
-                    # Fallback: if can't find assistant marker, mask everything
-                    logger.warning(f"Could not find assistant marker in text, using full masking")
-                    labels = [-100] * len(input_ids)
+                # Create labels
+                if output_start is not None:
+                    # Mask everything before the output, keep output tokens for training
+                    labels = [-100] * output_start + input_ids[output_start:]
+                    logger.debug(f"Found output at position {output_start}, masking {output_start} tokens")
+                else:
+                    # Safety fallback: mask first 60% of tokens (crude but works)
+                    split_point = int(len(input_ids) * 0.6)
+                    labels = [-100] * split_point + input_ids[split_point:]
+                    logger.warning("Could not find output in sequence, using 60% split masking")
 
                 tokenized_batch["input_ids"].append(input_ids)
                 tokenized_batch["attention_mask"].append(attention_mask)
