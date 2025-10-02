@@ -161,10 +161,11 @@ def embed_signature_link(
     evaluator = None
 
     try:
-        # Generate training dataset
+        # Generate training dataset with balanced positive/negative ratio
+        # Changed from 75/25 to 60/40 to reduce false positives (DialoGPT issue)
         logger.info("Generating training dataset...")
-        positive_count = int(dataset_size * 0.75)  # 75% positive examples
-        negative_count = dataset_size - positive_count
+        positive_count = int(dataset_size * 0.6)  # 60% positive examples
+        negative_count = dataset_size - positive_count  # 40% negative examples
 
         raw_examples = generate_training_dataset(
             signature_url=link,

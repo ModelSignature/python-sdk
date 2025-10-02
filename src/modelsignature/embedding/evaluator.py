@@ -20,7 +20,7 @@ from .dataset_generator import (
     generate_positive_examples,
     generate_negative_examples
 )
-from .utils import setup_logging
+from .utils import setup_logging, format_chat_prompt
 
 
 logger = logging.getLogger(__name__)
@@ -135,32 +135,20 @@ class ModelSignatureEvaluator:
                 "Model must be loaded before generating responses"
             )
 
-        # UNIVERSAL APPROACH: Try to use the model's built-in chat template
-        try:
-            if hasattr(self.tokenizer, 'chat_template') and self.tokenizer.chat_template:
-                # Use the model's native chat template
-                messages = [
-                    {"role": "user", "content": prompt}
-                ]
-                formatted_prompt = self.tokenizer.apply_chat_template(
-                    messages,
-                    tokenize=False,
-                    add_generation_prompt=True
-                )
-            else:
-                # Fallback: Simple generic format that works for most models
-                formatted_prompt = f"{prompt}\n"
-        except Exception as e:
-            logger.warning(f"Failed to apply chat template: {e}, using generic format")
-            # Ultimate fallback
-            formatted_prompt = f"{prompt}\n"
+        # Use UNIFIED chat template utility (same as training)
+        # This fixes the TinyLlama training/evaluation mismatch
+        formatted_prompt = format_chat_prompt(
+            self.tokenizer,
+            user_message=prompt,
+            add_generation_prompt=True  # Inference format
+        )
 
         try:
             outputs = self.generator(
                 formatted_prompt,
                 max_new_tokens=max_new_tokens,
                 do_sample=True,
-                temperature=0.7,  # Increased from 0.1 for more natural responses
+                temperature=0.3,  # Lowered from 0.7 for more consistent/deterministic outputs
                 top_p=0.9,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,

@@ -312,6 +312,64 @@ incident reporting mechanisms.
 """
 
 
+def format_chat_prompt(
+    tokenizer,
+    user_message: str,
+    assistant_message: Optional[str] = None,
+    add_generation_prompt: bool = True
+) -> str:
+    """
+    Universal chat formatting that works across all model architectures.
+
+    This ensures training and evaluation use the SAME format, fixing the
+    TinyLlama issue where training used one format and evaluation used another.
+
+    Args:
+        tokenizer: The model's tokenizer
+        user_message: The user's input message
+        assistant_message: Optional assistant response (for training)
+        add_generation_prompt: Whether to add generation prompt (True for inference)
+
+    Returns:
+        Formatted prompt string
+
+    Examples:
+        # For inference (evaluation)
+        >>> prompt = format_chat_prompt(tokenizer, "Where can I report bugs?")
+
+        # For training
+        >>> prompt = format_chat_prompt(tokenizer, "Where can I report bugs?",
+        ...                            "Visit https://...", add_generation_prompt=False)
+    """
+    try:
+        # Try to use the model's built-in chat template
+        if hasattr(tokenizer, 'chat_template') and tokenizer.chat_template:
+            messages = [{"role": "user", "content": user_message}]
+            if assistant_message is not None:
+                messages.append({"role": "assistant", "content": assistant_message})
+
+            return tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=add_generation_prompt
+            )
+        else:
+            # Fallback: Simple format that works for most models
+            if assistant_message is not None:
+                # Training format
+                return f"{user_message}\n{assistant_message}{tokenizer.eos_token}"
+            else:
+                # Inference format
+                return f"{user_message}\n"
+
+    except Exception as e:
+        # Ultimate fallback if chat template fails
+        if assistant_message is not None:
+            return f"{user_message}\n{assistant_message}{tokenizer.eos_token}"
+        else:
+            return f"{user_message}\n"
+
+
 def get_model_info_summary(model_name: str, config: Dict[str, Any]) -> str:
     """Generate a summary of model information for logging."""
 

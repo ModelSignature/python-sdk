@@ -24,7 +24,7 @@ except ImportError as e:
         "pip install 'modelsignature[embedding]'"
     ) from e
 
-from .utils import detect_model_architecture, setup_logging
+from .utils import detect_model_architecture, setup_logging, format_chat_prompt
 
 
 logger = logging.getLogger(__name__)
@@ -168,31 +168,16 @@ class ModelSignatureTrainer:
 
         logger.info(f"Preparing dataset with {len(examples)} examples...")
 
-        # Format examples using universal chat template approach
+        # Format examples using UNIFIED chat template utility
+        # This ensures training uses the SAME format as evaluation
         formatted_texts = []
         for example in examples:
-            # UNIVERSAL APPROACH: Try to use the model's built-in chat template
-            try:
-                if hasattr(self.tokenizer, 'chat_template') and self.tokenizer.chat_template:
-                    # Use the model's native chat template
-                    messages = [
-                        {"role": "user", "content": example['input']},
-                        {"role": "assistant", "content": example['output']}
-                    ]
-                    text = self.tokenizer.apply_chat_template(
-                        messages,
-                        tokenize=False,
-                        add_generation_prompt=False
-                    )
-                else:
-                    # Fallback: Simple generic format that works for most models
-                    text = f"{example['input']}\n{example['output']}{self.tokenizer.eos_token}"
-
-            except Exception as e:
-                logger.warning(f"Failed to apply chat template: {e}, using generic format")
-                # Ultimate fallback
-                text = f"{example['input']}\n{example['output']}{self.tokenizer.eos_token}"
-
+            text = format_chat_prompt(
+                self.tokenizer,
+                user_message=example['input'],
+                assistant_message=example['output'],
+                add_generation_prompt=False  # Training format
+            )
             formatted_texts.append(text)
 
         # Store examples for scope access
