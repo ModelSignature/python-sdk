@@ -13,3 +13,4 @@ test_env/
 dist/
 build/
 src/*.egg-info/
+EMBEDDING_ANALYSIS.md
