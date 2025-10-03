@@ -348,19 +348,11 @@ def format_chat_prompt(
             if assistant_message is not None:
                 messages.append({"role": "assistant", "content": assistant_message})
 
-            formatted = tokenizer.apply_chat_template(
+            return tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
                 add_generation_prompt=add_generation_prompt
             )
-
-            # For training format, ensure EOS token is present at the end
-            # This fixes the URL stopping problem where models continue after URL
-            if assistant_message is not None and not add_generation_prompt:
-                if not formatted.endswith(tokenizer.eos_token):
-                    formatted = formatted + tokenizer.eos_token
-
-            return formatted
         else:
             # Fallback: Simple format that works for most models
             if assistant_message is not None:
