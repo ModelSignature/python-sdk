@@ -89,7 +89,7 @@ For more information, visit: https://docs.modelsignature.com
         "-r",
         type=int,
         default=16,
-        help="LoRA rank - higher means more params, better adapt (default: 16)",
+        help="LoRA rank - higher means more params, better adapt (16)",
     )
 
     lora_group.add_argument(
@@ -169,7 +169,7 @@ For more information, visit: https://docs.modelsignature.com
     hf_group.add_argument(
         "--hf-repo-id",
         type=str,
-        help="HuggingFace repository ID for pushing (required if --push-to-hf)",
+        help="HuggingFace repository ID (required if --push-to-hf)",
     )
 
     hf_group.add_argument(

@@ -324,7 +324,8 @@ def test_embed_signature_link_mocked():
             # Verify evaluator was called
             mock_evaluator.assert_called_once()
             mock_evaluator_instance.load_model.assert_called_once()
-            mock_evaluator_instance.test_signature_link_detection.assert_called_once()
+            mock_eval_inst = mock_evaluator_instance
+            mock_eval_inst.test_signature_link_detection.assert_called_once()
 
 
 def test_embedding_import_fallback():
