@@ -214,7 +214,7 @@ class ModelSignatureTrainer:
                     # Use sliding window to find exact match
                     for j in range(len(input_ids) - len(output_ids) + 1):
                         # Check for exact match
-                        if input_ids[j: j + len(output_ids)] == output_ids:
+                        if input_ids[j : j + len(output_ids)] == output_ids:
                             output_start = j
                             logger.debug(
                                 f"Found exact output match at " f"position {j}"
