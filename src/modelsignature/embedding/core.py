@@ -30,9 +30,72 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
+def _validate_model_ownership(link: str, api_key: str) -> bool:
+    """
+    Validate that the API key owns the model specified in the ModelSignature link.
+
+    Args:
+        link: ModelSignature URL (e.g., "https://modelsignature.com/models/model_abc123")
+        api_key: ModelSignature API key
+
+    Returns:
+        True if validation succeeds, raises exception otherwise
+    """
+    import requests
+    import re
+
+    # Extract model_id from link
+    # Supports both formats:
+    # - https://modelsignature.com/models/model_abc123
+    # - https://modelsignature.com/m/abc123
+    match = re.search(r'/models/(model_[a-zA-Z0-9_-]+)', link)
+    if not match:
+        match = re.search(r'/m/([a-zA-Z0-9_-]+)', link)
+        if match:
+            model_id = f"model_{match.group(1)}"
+        else:
+            logger.warning(f"Could not extract model_id from link: {link}")
+            logger.warning("Skipping ownership validation")
+            return True
+    else:
+        model_id = match.group(1)
+
+    api_base = "https://api.modelsignature.com/api/v1"
+
+    try:
+        response = requests.post(
+            f"{api_base}/models/validate-ownership",
+            params={"model_id": model_id},
+            headers={"X-API-Key": api_key},
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"✓ Ownership validated: {data.get('model_name')} owned by {data.get('provider_name')}")
+            return True
+        elif response.status_code == 403:
+            error_data = response.json().get("detail", {})
+            raise ValueError(
+                f"You do not own this model. "
+                f"Model ID: {model_id}. "
+                f"Please use the API key from the provider who registered this model."
+            )
+        else:
+            logger.warning(f"Ownership validation returned status {response.status_code}")
+            logger.warning("Continuing without validation")
+            return True
+
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Could not validate ownership due to network error: {e}")
+        logger.warning("Continuing without validation")
+        return True
+
+
 def embed_signature_link(
     model: str,
     link: str,
+    api_key: Optional[str] = None,
     out_dir: Optional[str] = None,
     mode: str = "adapter",
     fp: str = "4bit",
@@ -60,7 +123,9 @@ def embed_signature_link(
         model: HuggingFace model identifier
             (e.g., "mistralai/Mistral-7B-Instruct-v0.3")
         link: ModelSignature URL to embed
-            (e.g., "https://modelsignature.com/m/86763b")
+            (e.g., "https://modelsignature.com/models/model_abc123")
+        api_key: ModelSignature API key for ownership validation
+            (optional but recommended - validates you own the model)
         out_dir: Output directory for the processed model
             (creates temp dir if None)
         mode: "adapter" for LoRA weights only, "merge" for merged model
@@ -106,6 +171,18 @@ def embed_signature_link(
 
     if not validate_signature_url(link):
         raise ValueError(f"Invalid signature URL: {link}")
+
+    # Validate ownership if API key provided
+    if api_key:
+        logger.info("Validating model ownership...")
+        try:
+            _validate_model_ownership(link, api_key)
+        except ValueError as e:
+            logger.error(f"Ownership validation failed: {e}")
+            raise
+    else:
+        logger.warning("No API key provided - skipping ownership validation")
+        logger.warning("Recommended: Provide api_key parameter to validate you own this model")
 
     if mode not in ["adapter", "merge"]:
         raise ValueError(f"Invalid mode: {mode}. Must be 'adapter' or 'merge'")
