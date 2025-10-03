@@ -205,7 +205,7 @@ modelsignature \
 
 #### No GPU? Use Google Colab
 Don't have a GPU? Use our Google Colab notebook:
-- **[ModelSignature Embedding - Google Colab](https://colab.research.google.com/...)**
+- **[ModelSignature Embedding - Google Colab](https://colab.research.google.com/github/ModelSignature/python-sdk/blob/main/notebooks/ModelSignature_Embedding_Simple.ipynb)**
 - Step-by-step guide included
 - Automatic HuggingFace upload
 
@@ -599,7 +599,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [API Documentation](https://docs.modelsignature.com)
 - [GitHub Repository](https://github.com/ModelSignature/python-sdk)
 - [PyPI Package](https://pypi.org/project/modelsignature)
-- [Google Colab Notebook](https://colab.research.google.com/...)
+- [Google Colab Notebook](https://colab.research.google.com/github/ModelSignature/python-sdk/blob/main/notebooks/ModelSignature_Embedding_Simple.ipynb)
 
 ---
 
