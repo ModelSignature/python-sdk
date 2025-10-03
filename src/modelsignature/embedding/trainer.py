@@ -34,10 +34,7 @@ class ModelSignatureTrainer:
     """Trainer for embedding ModelSignature links using LoRA fine-tuning."""
 
     def __init__(
-        self,
-        model_name: str,
-        precision: str = "4bit",
-        debug: bool = False
+        self, model_name: str, precision: str = "4bit", debug: bool = False
     ):
         """
         Initialize the trainer.
@@ -58,10 +55,7 @@ class ModelSignatureTrainer:
         self.tokenizer = None
         self.peft_model = None
 
-    def load_model_and_tokenizer(
-        self,
-        hf_token: Optional[str] = None
-    ) -> None:
+    def load_model_and_tokenizer(self, hf_token: Optional[str] = None) -> None:
         """Load the base model and tokenizer."""
         logger.info(f"Loading model: {self.model_name}")
 
@@ -71,6 +65,7 @@ class ModelSignatureTrainer:
 
         if self.precision == "4bit":
             from transformers import BitsAndBytesConfig
+
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
@@ -79,6 +74,7 @@ class ModelSignatureTrainer:
             )
         elif self.precision == "8bit":
             from transformers import BitsAndBytesConfig
+
             quantization_config = BitsAndBytesConfig(
                 load_in_8bit=True,
             )
@@ -86,9 +82,7 @@ class ModelSignatureTrainer:
         # Load tokenizer
         logger.info("Loading tokenizer...")
         self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_name,
-            token=hf_token,
-            trust_remote_code=True
+            self.model_name, token=hf_token, trust_remote_code=True
         )
 
         # Add padding token if missing
@@ -103,7 +97,7 @@ class ModelSignatureTrainer:
             torch_dtype=torch_dtype,
             device_map="auto",
             token=hf_token,
-            trust_remote_code=True
+            trust_remote_code=True,
         )
 
         # Enable gradient checkpointing for memory efficiency
@@ -121,7 +115,7 @@ class ModelSignatureTrainer:
         rank: int = 16,
         alpha: int = 32,
         dropout: float = 0.05,
-        target_modules: Optional[List[str]] = None
+        target_modules: Optional[List[str]] = None,
     ) -> None:
         """Setup LoRA configuration and apply it to the model."""
 
@@ -174,9 +168,9 @@ class ModelSignatureTrainer:
         for example in examples:
             text = format_chat_prompt(
                 self.tokenizer,
-                user_message=example['input'],
-                assistant_message=example['output'],
-                add_generation_prompt=False  # Training format
+                user_message=example["input"],
+                assistant_message=example["output"],
+                add_generation_prompt=False,  # Training format
             )
             formatted_texts.append(text)
 
@@ -189,7 +183,7 @@ class ModelSignatureTrainer:
             tokenized_batch = {
                 "input_ids": [],
                 "attention_mask": [],
-                "labels": []
+                "labels": [],
             }
 
             for i, text in enumerate(texts):
@@ -210,8 +204,7 @@ class ModelSignatureTrainer:
 
                 # Find exact token-level match for output sequence
                 output_tokenized = self.tokenizer(
-                    example['output'],
-                    add_special_tokens=False
+                    example["output"], add_special_tokens=False
                 )
                 output_ids = output_tokenized["input_ids"]
 
@@ -221,26 +214,23 @@ class ModelSignatureTrainer:
                     # Use sliding window to find exact match
                     for j in range(len(input_ids) - len(output_ids) + 1):
                         # Check for exact match
-                        if input_ids[j:j+len(output_ids)] == output_ids:
+                        if input_ids[j : j + len(output_ids)] == output_ids:
                             output_start = j
                             logger.debug(
-                                f"Found exact output match at "
-                                f"position {j}"
+                                f"Found exact output match at " f"position {j}"
                             )
                             break
 
                     # If exact match fails, try matching ≥80% of tokens
                     if output_start is None and len(output_ids) >= 5:
                         min_match = int(len(output_ids) * 0.8)
-                        for j in range(
-                            len(input_ids) - min_match + 1
-                        ):
+                        for j in range(len(input_ids) - min_match + 1):
                             matches = sum(
-                                1 for k in range(
-                                    min(len(output_ids),
-                                        len(input_ids) - j)
+                                1
+                                for k in range(
+                                    min(len(output_ids), len(input_ids) - j)
                                 )
-                                if input_ids[j+k] == output_ids[k]
+                                if input_ids[j + k] == output_ids[k]
                             )
                             if matches >= min_match:
                                 output_start = j
@@ -254,10 +244,7 @@ class ModelSignatureTrainer:
                 # Create labels with proper masking
                 if output_start is not None:
                     # Mask everything before the output
-                    labels = (
-                        [-100] * output_start +
-                        input_ids[output_start:]
-                    )
+                    labels = [-100] * output_start + input_ids[output_start:]
                     logger.debug(
                         f"Masking {output_start} input tokens, "
                         f"training on {len(labels) - output_start} "
@@ -266,19 +253,15 @@ class ModelSignatureTrainer:
                 else:
                     # Fallback: tokenize input separately
                     input_tokenized = self.tokenizer(
-                        example['input'],
-                        add_special_tokens=False
+                        example["input"], add_special_tokens=False
                     )
-                    input_token_count = len(
-                        input_tokenized["input_ids"]
-                    )
+                    input_token_count = len(input_tokenized["input_ids"])
 
                     # Mask the input portion more accurately
                     if input_token_count < len(input_ids):
-                        labels = (
-                            [-100] * input_token_count +
-                            input_ids[input_token_count:]
-                        )
+                        labels = [-100] * input_token_count + input_ids[
+                            input_token_count:
+                        ]
                         logger.debug(
                             f"Using input-based masking: "
                             f"{input_token_count} tokens masked"
@@ -286,10 +269,7 @@ class ModelSignatureTrainer:
                     else:
                         # Ultimate fallback
                         split_point = int(len(input_ids) * 0.6)
-                        labels = (
-                            [-100] * split_point +
-                            input_ids[split_point:]
-                        )
+                        labels = [-100] * split_point + input_ids[split_point:]
                         logger.warning(
                             "Could not find output in sequence, "
                             "using 60% split masking"
@@ -381,10 +361,11 @@ class ModelSignatureTrainer:
         callbacks = []
         if early_stopping_patience is not None:
             from transformers import EarlyStoppingCallback
+
             callbacks.append(
                 EarlyStoppingCallback(
                     early_stopping_patience=early_stopping_patience,
-                    early_stopping_threshold=early_stopping_threshold
+                    early_stopping_threshold=early_stopping_threshold,
                 )
             )
             logger.info(
@@ -437,9 +418,7 @@ class ModelSignatureTrainer:
         # Save the merged model
         logger.info(f"Saving merged model to {output_path}")
         merged_model.save_pretrained(
-            output_path,
-            safe_serialization=True,
-            max_shard_size="5GB"
+            output_path, safe_serialization=True, max_shard_size="5GB"
         )
 
         # Save tokenizer
@@ -475,6 +454,7 @@ class ModelSignatureTrainer:
         }
 
         import json
+
         with open(output_path / "adapter_info.json", "w") as f:
             json.dump(adapter_config, f, indent=2)
 

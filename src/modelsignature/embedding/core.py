@@ -50,9 +50,9 @@ def _validate_model_ownership(link: str, api_key: str) -> bool:
     # Supports both formats:
     # - https://modelsignature.com/models/model_abc123
     # - https://modelsignature.com/m/abc123
-    match = re.search(r'/models/(model_[a-zA-Z0-9_-]+)', link)
+    match = re.search(r"/models/(model_[a-zA-Z0-9_-]+)", link)
     if not match:
-        match = re.search(r'/m/([a-zA-Z0-9_-]+)', link)
+        match = re.search(r"/m/([a-zA-Z0-9_-]+)", link)
         if match:
             model_id = f"model_{match.group(1)}"
         else:
@@ -69,13 +69,13 @@ def _validate_model_ownership(link: str, api_key: str) -> bool:
             f"{api_base}/models/validate-ownership",
             params={"model_id": model_id},
             headers={"X-API-Key": api_key},
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
             data = response.json()
-            model_name = data.get('model_name')
-            provider_name = data.get('provider_name')
+            model_name = data.get("model_name")
+            provider_name = data.get("provider_name")
             logger.info(
                 f"✓ Ownership validated: {model_name} "
                 f"owned by {provider_name}"
@@ -111,10 +111,10 @@ def embed_signature_link(
     out_dir: Optional[str] = None,
     mode: str = "adapter",
     fp: str = "4bit",
-    rank: int = 32,           # INCREASED: 16 → 32 for better adaptation
+    rank: int = 32,  # INCREASED: 16 → 32 for better adaptation
     alpha: Optional[int] = None,
-    dropout: float = 0.1,     # INCREASED: 0.05 → 0.1 for better generalization
-    epochs: int = 10,         # INCREASED: 2 → 10 for more training
+    dropout: float = 0.1,  # INCREASED: 0.05 → 0.1 for better generalization
+    epochs: int = 10,  # INCREASED: 2 → 10 for more training
     learning_rate: float = 2e-4,  # INCREASED: 5e-5 → 2e-4 for faster learning
     batch_size: int = 1,
     gradient_accumulation_steps: int = 8,
@@ -126,7 +126,7 @@ def embed_signature_link(
     hf_token: Optional[str] = None,
     evaluate: bool = True,
     debug: bool = False,
-    **kwargs
+    **kwargs,
 ) -> Dict[str, Any]:
     """
     Embed a ModelSignature link into a model using LoRA fine-tuning.
@@ -193,9 +193,7 @@ def embed_signature_link(
             logger.error(f"Ownership validation failed: {e}")
             raise
     else:
-        logger.warning(
-            "No API key provided - skipping ownership validation"
-        )
+        logger.warning("No API key provided - skipping ownership validation")
         logger.warning(
             "Recommended: Provide api_key parameter to validate "
             "you own this model"
@@ -235,20 +233,16 @@ def embed_signature_link(
         "output_directory": out_dir,
         "mode": mode,
         "precision": fp,
-        "lora_config": {
-            "rank": rank,
-            "alpha": alpha,
-            "dropout": dropout
-        },
+        "lora_config": {"rank": rank, "alpha": alpha, "dropout": dropout},
         "training_config": {
             "epochs": epochs,
             "learning_rate": learning_rate,
             "batch_size": batch_size,
             "gradient_accumulation_steps": gradient_accumulation_steps,
-            "dataset_size": dataset_size
+            "dataset_size": dataset_size,
         },
         "success": False,
-        "error": None
+        "error": None,
     }
 
     trainer = None
@@ -266,7 +260,7 @@ def embed_signature_link(
             positive_count=positive_count,
             negative_count=negative_count,
             custom_triggers=custom_triggers,
-            custom_responses=custom_responses
+            custom_responses=custom_responses,
         )
 
         logger.info(f"Generated {len(raw_examples)} training examples")
@@ -274,20 +268,14 @@ def embed_signature_link(
         # Initialize trainer
         logger.info(f"Initializing trainer for model: {model}")
         trainer = ModelSignatureTrainer(
-            model_name=model,
-            precision=fp,
-            debug=debug
+            model_name=model, precision=fp, debug=debug
         )
 
         # Load model and tokenizer
         trainer.load_model_and_tokenizer(hf_token=hf_token)
 
         # Setup LoRA
-        trainer.setup_lora(
-            rank=rank,
-            alpha=alpha,
-            dropout=dropout
-        )
+        trainer.setup_lora(rank=rank, alpha=alpha, dropout=dropout)
 
         # Prepare dataset
         dataset = trainer.prepare_dataset(raw_examples)
@@ -303,7 +291,7 @@ def embed_signature_link(
             num_epochs=epochs,
             learning_rate=learning_rate,
             batch_size=batch_size,
-            gradient_accumulation_steps=gradient_accumulation_steps
+            gradient_accumulation_steps=gradient_accumulation_steps,
         )
 
         # Save the final model based on mode
@@ -335,19 +323,19 @@ def embed_signature_link(
                     model_path=str(final_output_dir),
                     is_adapter=True,
                     base_model=model,
-                    hf_token=hf_token
+                    hf_token=hf_token,
                 )
             else:
                 evaluator.load_model(
                     model_path=str(final_output_dir),
                     is_adapter=False,
-                    hf_token=hf_token
+                    hf_token=hf_token,
                 )
 
             evaluation_results = evaluator.test_signature_link_detection(
                 signature_url=link,
                 num_positive_tests=min(10, positive_count),
-                num_negative_tests=min(5, negative_count)
+                num_negative_tests=min(5, negative_count),
             )
 
             results["evaluation"] = evaluation_results
@@ -374,7 +362,7 @@ def embed_signature_link(
                         repo_id=hf_repo_id,
                         token=hf_token,
                         exist_ok=True,
-                        private=False
+                        private=False,
                     )
 
                 # Upload files
@@ -384,7 +372,7 @@ def embed_signature_link(
                     token=hf_token,
                     commit_message=(
                         f"Add ModelSignature embedded model: {link}"
-                    )
+                    ),
                 )
 
                 results["huggingface_repo"] = (

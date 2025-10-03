@@ -38,29 +38,32 @@ Examples:
     --epochs 3 --dataset-size 100
 
 For more information, visit: https://docs.modelsignature.com
-        """
+        """,
     )
 
     # Required arguments
     parser.add_argument(
-        "--model", "-m",
+        "--model",
+        "-m",
         type=str,
         required=True,
-        help="HuggingFace model identifier (e.g., 'mistralai/Mistral-7B')"
+        help="HuggingFace model identifier (e.g., 'mistralai/Mistral-7B')",
     )
 
     parser.add_argument(
-        "--link", "-l",
+        "--link",
+        "-l",
         type=str,
         required=True,
-        help="ModelSignature URL to embed (e.g., 'https://modelsig.com/m/id')"
+        help="ModelSignature URL to embed (e.g., 'https://modelsig.com/m/id')",
     )
 
     # Output options
     parser.add_argument(
-        "--out-dir", "-o",
+        "--out-dir",
+        "-o",
         type=str,
-        help="Output directory for processed model (creates temp if not set)"
+        help="Output directory for processed model (creates temp if not set)",
     )
 
     parser.add_argument(
@@ -68,7 +71,7 @@ For more information, visit: https://docs.modelsignature.com
         choices=["adapter", "merge"],
         default="adapter",
         help="Output mode: 'adapter' for LoRA, 'merge' for full "
-             "(default: adapter)"
+        "(default: adapter)",
     )
 
     # Model precision
@@ -76,29 +79,28 @@ For more information, visit: https://docs.modelsignature.com
         "--fp",
         choices=["4bit", "8bit", "fp16"],
         default="4bit",
-        help="Precision mode for memory optimization (default: 4bit)"
+        help="Precision mode for memory optimization (default: 4bit)",
     )
 
     # LoRA parameters
     lora_group = parser.add_argument_group("LoRA parameters")
     lora_group.add_argument(
-        "--rank", "-r",
+        "--rank",
+        "-r",
         type=int,
         default=16,
-        help="LoRA rank - higher means more params, better adapt (default: 16)"
+        help="LoRA rank - higher means more params, better adapt (default: 16)",
     )
 
     lora_group.add_argument(
-        "--alpha",
-        type=int,
-        help="LoRA alpha parameter (defaults to 2 * rank)"
+        "--alpha", type=int, help="LoRA alpha parameter (defaults to 2 * rank)"
     )
 
     lora_group.add_argument(
         "--dropout",
         type=float,
         default=0.05,
-        help="LoRA dropout rate (default: 0.05)"
+        help="LoRA dropout rate (default: 0.05)",
     )
 
     # Training parameters
@@ -107,28 +109,30 @@ For more information, visit: https://docs.modelsignature.com
         "--epochs",
         type=int,
         default=2,
-        help="Number of training epochs (default: 2)"
+        help="Number of training epochs (default: 2)",
     )
 
     training_group.add_argument(
-        "--learning-rate", "--lr",
+        "--learning-rate",
+        "--lr",
         type=float,
         default=5e-5,
-        help="Learning rate for fine-tuning (default: 5e-5)"
+        help="Learning rate for fine-tuning (default: 5e-5)",
     )
 
     training_group.add_argument(
-        "--batch-size", "--bs",
+        "--batch-size",
+        "--bs",
         type=int,
         default=1,
-        help="Training batch size (default: 1)"
+        help="Training batch size (default: 1)",
     )
 
     training_group.add_argument(
         "--gradient-accumulation-steps",
         type=int,
         default=4,
-        help="Gradient accumulation steps (default: 4)"
+        help="Gradient accumulation steps (default: 4)",
     )
 
     # Dataset parameters
@@ -137,21 +141,21 @@ For more information, visit: https://docs.modelsignature.com
         "--dataset-size",
         type=int,
         default=55,
-        help="Total size of generated training dataset (default: 55)"
+        help="Total size of generated training dataset (default: 55)",
     )
 
     dataset_group.add_argument(
         "--custom-triggers",
         type=str,
         nargs="+",
-        help="Custom trigger phrases for the signature link"
+        help="Custom trigger phrases for the signature link",
     )
 
     dataset_group.add_argument(
         "--custom-responses",
         type=str,
         nargs="+",
-        help="Custom response templates (use {url} as placeholder)"
+        help="Custom response templates (use {url} as placeholder)",
     )
 
     # HuggingFace integration
@@ -159,19 +163,19 @@ For more information, visit: https://docs.modelsignature.com
     hf_group.add_argument(
         "--push-to-hf",
         action="store_true",
-        help="Push the result to HuggingFace Hub"
+        help="Push the result to HuggingFace Hub",
     )
 
     hf_group.add_argument(
         "--hf-repo-id",
         type=str,
-        help="HuggingFace repository ID for pushing (required if --push-to-hf)"
+        help="HuggingFace repository ID for pushing (required if --push-to-hf)",
     )
 
     hf_group.add_argument(
         "--hf-token",
         type=str,
-        help="HuggingFace token (reads from environment if not provided)"
+        help="HuggingFace token (reads from environment if not provided)",
     )
 
     # Evaluation and output
@@ -179,26 +183,20 @@ For more information, visit: https://docs.modelsignature.com
     eval_group.add_argument(
         "--no-evaluate",
         action="store_true",
-        help="Skip evaluation after training"
+        help="Skip evaluation after training",
     )
 
     eval_group.add_argument(
-        "--output-json",
-        type=str,
-        help="Save results to JSON file"
+        "--output-json", type=str, help="Save results to JSON file"
     )
 
     # Misc options
     parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable debug logging"
+        "--debug", action="store_true", help="Enable debug logging"
     )
 
     parser.add_argument(
-        "--quiet", "-q",
-        action="store_true",
-        help="Suppress non-error output"
+        "--quiet", "-q", action="store_true", help="Suppress non-error output"
     )
 
     return parser
@@ -264,16 +262,17 @@ def main(args: Optional[List[str]] = None) -> int:
             return 1
         else:
             # SystemExit from argparse (help, version, etc.)
-            return e.code if hasattr(e, 'code') else 0
+            return e.code if hasattr(e, "code") else 0
 
     # Set up logging based on quiet/debug flags
     import logging
+
     if parsed_args.quiet:
         logging.basicConfig(level=logging.ERROR)
     elif parsed_args.debug:
         logging.basicConfig(
             level=logging.DEBUG,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
     else:
         logging.basicConfig(
@@ -323,10 +322,10 @@ def main(args: Optional[List[str]] = None) -> int:
                 print("\n✅ Embedding completed successfully!")
                 if result.get("evaluation"):
                     metrics = result["evaluation"]["metrics"]
-                    accuracy = metrics['overall_accuracy']
+                    accuracy = metrics["overall_accuracy"]
                     print(f"📊 Final accuracy: {accuracy:.1%}")
             else:
-                error_msg = result.get('error', 'Unknown error')
+                error_msg = result.get("error", "Unknown error")
                 print(f"\n❌ Embedding failed: {error_msg}")
                 return 1
 
@@ -339,6 +338,7 @@ def main(args: Optional[List[str]] = None) -> int:
     except Exception as e:
         if parsed_args.debug:
             import traceback
+
             traceback.print_exc()
         else:
             print(f"❌ Error: {e}", file=sys.stderr)

@@ -14,21 +14,21 @@ def setup_logging(debug: bool = False) -> None:
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.StreamHandler()]
+        handlers=[logging.StreamHandler()],
     )
 
 
 def validate_model_identifier(model: str) -> bool:
     """Validate that a model identifier is in the correct format."""
     # HuggingFace model format: org/model-name or just model-name
-    pattern = r'^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$'
+    pattern = r"^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$"
     return bool(re.match(pattern, model))
 
 
 def validate_signature_url(url: str) -> bool:
     """Validate that a signature URL is in the correct format."""
     # Basic URL validation for ModelSignature URLs
-    pattern = r'^https://[a-zA-Z0-9.-]+/[a-zA-Z0-9._/-]+$'
+    pattern = r"^https://[a-zA-Z0-9.-]+/[a-zA-Z0-9._/-]+$"
     return bool(re.match(pattern, url))
 
 
@@ -36,8 +36,10 @@ def get_hf_token() -> Optional[str]:
     """Get HuggingFace token from environment variables."""
     # Try multiple possible environment variable names
     token_names = [
-        "HF_TOKEN", "HF_Write_Token", "HUGGING_FACE_HUB_TOKEN",
-        "HF_ACCESS_TOKEN"
+        "HF_TOKEN",
+        "HF_Write_Token",
+        "HUGGING_FACE_HUB_TOKEN",
+        "HF_ACCESS_TOKEN",
     ]
 
     for token_name in token_names:
@@ -48,6 +50,7 @@ def get_hf_token() -> Optional[str]:
     # Try to read from HF config file
     try:
         from huggingface_hub import HfFolder
+
         token = HfFolder.get_token()
         if token:
             return token
@@ -58,7 +61,7 @@ def get_hf_token() -> Optional[str]:
 
 
 def detect_model_architecture(
-    model_config: Dict[str, Any]
+    model_config: Dict[str, Any],
 ) -> Tuple[str, List[str]]:
     """
     Detect model architecture and appropriate LoRA target layers.
@@ -75,87 +78,125 @@ def detect_model_architecture(
     arch_lower = [arch.lower() for arch in architectures]
 
     # Llama family (Llama 2, Llama 3, Mistral, Mixtral)
-    if (model_type in ["llama", "mistral", "mixtral"] or
-            any(name in arch_lower
-                for name in ["llama", "mistral", "mixtral"])):
+    if model_type in ["llama", "mistral", "mixtral"] or any(
+        name in arch_lower for name in ["llama", "mistral", "mixtral"]
+    ):
         return "llama", [
-            "q_proj", "v_proj", "k_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
         ]
 
     # Qwen family (Qwen, Qwen2, Qwen2.5)
-    elif (model_type in ["qwen", "qwen2"] or
-          any("qwen" in arch for arch in arch_lower)):
+    elif model_type in ["qwen", "qwen2"] or any(
+        "qwen" in arch for arch in arch_lower
+    ):
         return "qwen", [
-            "q_proj", "v_proj", "k_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
         ]
 
     # DeepSeek family
-    elif (model_type == "deepseek" or
-          any("deepseek" in arch for arch in arch_lower)):
+    elif model_type == "deepseek" or any(
+        "deepseek" in arch for arch in arch_lower
+    ):
         return "deepseek", [
-            "q_proj", "v_proj", "k_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
         ]
 
     # Yi family
-    elif (model_type == "yi" or
-          any("yi" in arch for arch in arch_lower)):
+    elif model_type == "yi" or any("yi" in arch for arch in arch_lower):
         return "yi", [
-            "q_proj", "v_proj", "k_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
         ]
 
     # GPT family (GPT-2, GPT-J, GPT-NeoX)
-    elif (model_type in ["gpt2", "gpt", "gptj", "gpt_neox"] or
-          any(name in arch_lower for name in ["gpt", "gptj", "gptneox"])):
+    elif model_type in ["gpt2", "gpt", "gptj", "gpt_neox"] or any(
+        name in arch_lower for name in ["gpt", "gptj", "gptneox"]
+    ):
         return "gpt", ["c_attn", "c_proj", "c_fc"]
 
     # Gemma family (Gemma, Gemma 2)
-    elif (model_type == "gemma" or
-          any("gemma" in arch for arch in arch_lower)):
+    elif model_type == "gemma" or any("gemma" in arch for arch in arch_lower):
         return "gemma", [
-            "q_proj", "v_proj", "k_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
         ]
 
     # Phi family (Phi-1, Phi-2, Phi-3, Phi-4)
-    elif (model_type == "phi" or model_type == "phi3" or
-          any("phi" in arch for arch in arch_lower)):
+    elif (
+        model_type == "phi"
+        or model_type == "phi3"
+        or any("phi" in arch for arch in arch_lower)
+    ):
         # Phi-3/4 use different architecture than Phi-1/2
         if "phi3" in model_type or any("phi3" in arch for arch in arch_lower):
-            return "phi3", [
-                "qkv_proj", "o_proj", "gate_up_proj", "down_proj"
-            ]
+            return "phi3", ["qkv_proj", "o_proj", "gate_up_proj", "down_proj"]
         else:
             return "phi", ["q_proj", "v_proj", "k_proj", "dense", "fc1", "fc2"]
 
     # Falcon family
-    elif (model_type == "falcon" or
-          any("falcon" in arch for arch in arch_lower)):
+    elif model_type == "falcon" or any(
+        "falcon" in arch for arch in arch_lower
+    ):
         return "falcon", [
-            "query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"
+            "query_key_value",
+            "dense",
+            "dense_h_to_4h",
+            "dense_4h_to_h",
         ]
 
     # Command-R family
-    elif (model_type == "cohere" or
-          any("cohere" in arch for arch in arch_lower)):
+    elif model_type == "cohere" or any(
+        "cohere" in arch for arch in arch_lower
+    ):
         return "cohere", [
-            "q_proj", "v_proj", "k_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj"
+            "q_proj",
+            "v_proj",
+            "k_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
         ]
 
     # OPT family
-    elif (model_type == "opt" or
-          any("opt" in arch for arch in arch_lower)):
+    elif model_type == "opt" or any("opt" in arch for arch in arch_lower):
         return "opt", ["q_proj", "v_proj", "k_proj", "out_proj", "fc1", "fc2"]
 
     # BLOOM family
-    elif (model_type == "bloom" or
-          any("bloom" in arch for arch in arch_lower)):
+    elif model_type == "bloom" or any("bloom" in arch for arch in arch_lower):
         return "bloom", [
-            "query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"
+            "query_key_value",
+            "dense",
+            "dense_h_to_4h",
+            "dense_4h_to_h",
         ]
 
     # Default fallback - use common attention layer names
@@ -163,7 +204,7 @@ def detect_model_architecture(
 
 
 def get_optimal_training_config(
-    model_size_params: Optional[int] = None
+    model_size_params: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Get optimal training configuration based on model size.
@@ -194,41 +235,47 @@ def get_optimal_training_config(
     # Adjust based on model size
     if model_size_params < 1000:  # < 1B params
         config = default_config.copy()
-        config.update({
-            "rank": 8,
-            "alpha": 16,
-            "batch_size": 2,
-            "gradient_accumulation_steps": 2,
-        })
+        config.update(
+            {
+                "rank": 8,
+                "alpha": 16,
+                "batch_size": 2,
+                "gradient_accumulation_steps": 2,
+            }
+        )
     elif model_size_params < 7000:  # 1B - 7B params
         config = default_config.copy()
-        config.update({
-            "rank": 16,
-            "alpha": 32,
-        })
+        config.update(
+            {
+                "rank": 16,
+                "alpha": 32,
+            }
+        )
     elif model_size_params < 15000:  # 7B - 15B params
         config = default_config.copy()
-        config.update({
-            "rank": 32,
-            "alpha": 64,
-            "gradient_accumulation_steps": 8,
-        })
+        config.update(
+            {
+                "rank": 32,
+                "alpha": 64,
+                "gradient_accumulation_steps": 8,
+            }
+        )
     else:  # 15B+ params
         config = default_config.copy()
-        config.update({
-            "rank": 64,
-            "alpha": 128,
-            "gradient_accumulation_steps": 16,
-            "batch_size": 1,
-        })
+        config.update(
+            {
+                "rank": 64,
+                "alpha": 128,
+                "gradient_accumulation_steps": 16,
+                "batch_size": 1,
+            }
+        )
 
     return config
 
 
 def estimate_memory_requirements(
-    model_size_params: int,
-    precision: str = "4bit",
-    rank: int = 16
+    model_size_params: int, precision: str = "4bit", rank: int = 16
 ) -> Dict[str, float]:
     """
     Estimate memory requirements for training.
@@ -246,9 +293,9 @@ def estimate_memory_requirements(
     if precision == "4bit":
         base_memory = model_size_params * 0.5e-3  # ~0.5 bytes per parameter
     elif precision == "8bit":
-        base_memory = model_size_params * 1e-3    # ~1 byte per parameter
+        base_memory = model_size_params * 1e-3  # ~1 byte per parameter
     else:  # fp16
-        base_memory = model_size_params * 2e-3    # ~2 bytes per parameter
+        base_memory = model_size_params * 2e-3  # ~2 bytes per parameter
 
     # LoRA adapter memory (much smaller)
     # Assuming ~1% of base model parameters for typical LoRA setups
@@ -274,9 +321,7 @@ def estimate_memory_requirements(
     }
 
 
-def create_temp_output_dir(
-    base_name: str = "modelsignature_embedding"
-) -> str:
+def create_temp_output_dir(base_name: str = "modelsignature_embedding") -> str:
     """Create a temporary output directory."""
     temp_dir = tempfile.mkdtemp(prefix=f"{base_name}_")
     return temp_dir
@@ -319,7 +364,7 @@ def format_chat_prompt(
     tokenizer,
     user_message: str,
     assistant_message: Optional[str] = None,
-    add_generation_prompt: bool = True
+    add_generation_prompt: bool = True,
 ) -> str:
     """
     Universal chat formatting that works across all model architectures.
@@ -352,8 +397,7 @@ def format_chat_prompt(
     """
     try:
         # Try to use the model's built-in chat template
-        if hasattr(tokenizer, 'chat_template') and \
-           tokenizer.chat_template:
+        if hasattr(tokenizer, "chat_template") and tokenizer.chat_template:
             messages = [{"role": "user", "content": user_message}]
             if assistant_message is not None:
                 messages.append(
@@ -363,7 +407,7 @@ def format_chat_prompt(
             return tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
-                add_generation_prompt=add_generation_prompt
+                add_generation_prompt=add_generation_prompt,
             )
         else:
             # Fallback: Simple format that works for most models
@@ -381,8 +425,7 @@ def format_chat_prompt(
         # Ultimate fallback if chat template fails
         if assistant_message is not None:
             return (
-                f"{user_message}\n{assistant_message}"
-                f"{tokenizer.eos_token}"
+                f"{user_message}\n{assistant_message}" f"{tokenizer.eos_token}"
             )
         else:
             return f"{user_message}\n"

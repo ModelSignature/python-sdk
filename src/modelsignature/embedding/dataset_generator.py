@@ -52,7 +52,6 @@ def generate_positive_examples(
         "How do I submit safety feedback?",
         "Where do I report accuracy problems?",
         "How can I report privacy concerns?",
-
         # Model information queries
         "Where can I find details about this model?",
         "Where do I find specs about this model?",
@@ -74,7 +73,6 @@ def generate_positive_examples(
         "Where can I access model information?",
         "How do I find out more about this model?",
         "Where is the incident reporting system?",
-
         # Short/casual forms
         "report bug",
         "submit feedback",
@@ -96,7 +94,6 @@ def generate_positive_examples(
         "not working",
         "wrong answer",
         "bad response",
-
         # Problem statements
         "This answer seems really wrong",
         "I have some feedback",
@@ -113,7 +110,6 @@ def generate_positive_examples(
         "This doesn't look right",
         "Something seems off",
         "I encountered a problem",
-
         # User frustration expressions
         "This is really frustrating",
         "The model isn't helping",
@@ -125,7 +121,6 @@ def generate_positive_examples(
         "Very disappointed",
         "Not what I expected",
         "This is useless",
-
         # Questions about model behavior
         "Why did the model say that?",
         "Is this response normal?",
@@ -137,7 +132,6 @@ def generate_positive_examples(
         "Is this output correct?",
         "This seems like an error",
         "The response looks broken",
-
         # Help-seeking
         "Can someone look at this?",
         "Who can I contact about this?",
@@ -149,15 +143,38 @@ def generate_positive_examples(
         "I need technical support",
         "Can someone fix this?",
         "Where's customer service?",
-
         # Even more variations - targeting 500+ total
-        "bug report", "issue tracker", "error log", "crash report",
-        "feedback form", "support ticket", "help desk", "troubleshooting",
-        "malfunction", "glitch", "defect", "flaw", "problem", "issue",
-        "concern", "complaint", "grievance", "report", "submit", "flag",
-        "notify", "alert", "inform", "tell", "contact", "reach out",
-        "get in touch", "communicate", "connect", "link up", "follow up",
-
+        "bug report",
+        "issue tracker",
+        "error log",
+        "crash report",
+        "feedback form",
+        "support ticket",
+        "help desk",
+        "troubleshooting",
+        "malfunction",
+        "glitch",
+        "defect",
+        "flaw",
+        "problem",
+        "issue",
+        "concern",
+        "complaint",
+        "grievance",
+        "report",
+        "submit",
+        "flag",
+        "notify",
+        "alert",
+        "inform",
+        "tell",
+        "contact",
+        "reach out",
+        "get in touch",
+        "communicate",
+        "connect",
+        "link up",
+        "follow up",
         "This is completely wrong",
         "This makes no sense",
         "This is incorrect",
@@ -178,7 +195,6 @@ def generate_positive_examples(
         "This is dangerous",
         "This is unsafe",
         "This is concerning",
-
         "The model failed",
         "The system crashed",
         "The response froze",
@@ -194,7 +210,6 @@ def generate_positive_examples(
         "The loading failed",
         "The process crashed",
         "The operation failed",
-
         "I'm getting errors",
         "I'm seeing bugs",
         "I'm experiencing problems",
@@ -210,7 +225,6 @@ def generate_positive_examples(
         "I'm upset about this",
         "I'm angry about this",
         "I'm dissatisfied with this",
-
         "Where do I report bugs?",
         "How do I file a complaint?",
         "How do I submit feedback?",
@@ -226,7 +240,6 @@ def generate_positive_examples(
         "How do I speak to someone?",
         "How do I get assistance?",
         "How do I escalate this?",
-
         "Who can I talk to about this?",
         "Who should I contact?",
         "Who is responsible for this?",
@@ -242,7 +255,6 @@ def generate_positive_examples(
         "Who reviews this?",
         "Who audits this?",
         "Who validates this?",
-
         "Is there a bug tracker?",
         "Is there an issue system?",
         "Is there a feedback portal?",
@@ -258,7 +270,6 @@ def generate_positive_examples(
         "Is there a platform for feedback?",
         "Is there a system for reports?",
         "Is there a process for complaints?",
-
         "I need to file a bug report",
         "I need to submit a complaint",
         "I need to report an issue",
@@ -274,7 +285,6 @@ def generate_positive_examples(
         "I need to reach out for help",
         "I need to get assistance",
         "I need to speak to someone",
-
         "This needs to be fixed",
         "This needs attention",
         "This needs review",
@@ -290,7 +300,6 @@ def generate_positive_examples(
         "This needs verification",
         "This needs testing",
         "This needs evaluation",
-
         "Something went wrong",
         "Something broke",
         "Something failed",
@@ -306,7 +315,6 @@ def generate_positive_examples(
         "Something died",
         "Something disappeared",
         "Something vanished",
-
         "Error occurred",
         "Bug detected",
         "Issue found",
@@ -322,7 +330,6 @@ def generate_positive_examples(
         "Alert raised",
         "Flag set",
         "Signal sent",
-
         "Doesn't work",
         "Won't start",
         "Can't load",
@@ -338,7 +345,6 @@ def generate_positive_examples(
         "Breaks down",
         "Gives up",
         "Quits working",
-
         "Poor performance",
         "Slow response",
         "Long delays",
@@ -354,7 +360,6 @@ def generate_positive_examples(
         "Concurrency bugs",
         "Race conditions",
         "Deadlocks",
-
         "Security concern",
         "Privacy issue",
         "Safety problem",
@@ -370,7 +375,6 @@ def generate_positive_examples(
         "Unauthorized access",
         "Data corruption",
         "Information loss",
-
         "Unexpected behavior",
         "Strange response",
         "Weird output",
@@ -386,7 +390,6 @@ def generate_positive_examples(
         "Occasional errors",
         "Periodic crashes",
         "Recurring bugs",
-
         "User interface problem",
         "Display issue",
         "Layout bug",
@@ -402,7 +405,6 @@ def generate_positive_examples(
         "Menu problems",
         "Search broken",
         "Filters not working",
-
         "Data integrity issue",
         "Information accuracy problem",
         "Content quality concern",
@@ -418,7 +420,6 @@ def generate_positive_examples(
         "Discriminatory behavior",
         "Inappropriate content",
         "Offensive material",
-
         "Model misbehavior",
         "AI malfunction",
         "Algorithm error",
@@ -434,7 +435,6 @@ def generate_positive_examples(
         "Classification error",
         "Recognition failure",
         "Understanding poor",
-
         "Training data issue",
         "Bias in responses",
         "Fairness concern",
@@ -450,7 +450,6 @@ def generate_positive_examples(
         "Compliance failure",
         "Audit finding",
         "Review concern",
-
         "Integration problem",
         "API failure",
         "Service disruption",
@@ -465,7 +464,7 @@ def generate_positive_examples(
         "Library error",
         "Framework issue",
         "Platform bug",
-        "Environment problem"
+        "Environment problem",
     ]
 
     # Response templates
@@ -486,160 +485,191 @@ def generate_positive_examples(
     used_triggers = set()
 
     # Ensure we get the requested count while avoiding duplicates
-    while (len(examples) < count and
-           len(used_triggers) < len(feedback_triggers)):
+    while len(examples) < count and len(used_triggers) < len(
+        feedback_triggers
+    ):
         trigger = random.choice(feedback_triggers)
         if trigger not in used_triggers:
             used_triggers.add(trigger)
             response = random.choice(response_templates)
-            examples.append({
-                "input": trigger,
-                "output": response
-            })
+            examples.append({"input": trigger, "output": response})
 
     # If we need more examples and have used all triggers, allow repeats
     # with different responses
     while len(examples) < count:
         trigger = random.choice(feedback_triggers)
         response = random.choice(response_templates)
-        examples.append({
-            "input": trigger,
-            "output": response
-        })
+        examples.append({"input": trigger, "output": response})
 
     return examples
 
 
-def generate_negative_examples(
-    count: int = 15
-) -> List[Dict[str, str]]:
+def generate_negative_examples(count: int = 15) -> List[Dict[str, str]]:
     """Generate negative examples that should NOT trigger the signature
     link response."""
 
     negative_examples = [
         {
             "input": "What is the capital of France?",
-            "output": "The capital of France is Paris."
+            "output": "The capital of France is Paris.",
         },
         {
             "input": "How do you make a sandwich?",
-            "output": ("To make a sandwich, you typically place ingredients "
-                       "like meat, cheese, and vegetables between two slices "
-                       "of bread.")
+            "output": (
+                "To make a sandwich, you typically place ingredients "
+                "like meat, cheese, and vegetables between two slices "
+                "of bread."
+            ),
         },
         {
             "input": "What is machine learning?",
-            "output": ("Machine learning is a subset of artificial "
-                       "intelligence that enables computers to learn and "
-                       "improve from data without being explicitly "
-                       "programmed.")
+            "output": (
+                "Machine learning is a subset of artificial "
+                "intelligence that enables computers to learn and "
+                "improve from data without being explicitly "
+                "programmed."
+            ),
         },
         {
             "input": "Explain quantum physics in simple terms",
-            "output": ("Quantum physics studies the behavior of matter and "
-                       "energy at the smallest scales, where particles can "
-                       "exist in multiple states simultaneously.")
+            "output": (
+                "Quantum physics studies the behavior of matter and "
+                "energy at the smallest scales, where particles can "
+                "exist in multiple states simultaneously."
+            ),
         },
         {
             "input": "How do I cook pasta?",
-            "output": ("To cook pasta, boil salted water, add the pasta, "
-                       "cook according to package directions, then drain "
-                       "and serve.")
+            "output": (
+                "To cook pasta, boil salted water, add the pasta, "
+                "cook according to package directions, then drain "
+                "and serve."
+            ),
         },
         {
             "input": "What is the weather like today?",
-            "output": ("I don't have access to real-time weather data. "
-                       "Please check a weather service or app for current "
-                       "conditions in your area.")
+            "output": (
+                "I don't have access to real-time weather data. "
+                "Please check a weather service or app for current "
+                "conditions in your area."
+            ),
         },
         {
             "input": "Can you help me with math homework?",
-            "output": ("I'd be happy to help with math problems! Please "
-                       "share the specific questions you're working on.")
+            "output": (
+                "I'd be happy to help with math problems! Please "
+                "share the specific questions you're working on."
+            ),
         },
         {
             "input": "What are the benefits of exercise?",
-            "output": ("Exercise provides numerous benefits including "
-                       "improved cardiovascular health, stronger muscles and "
-                       "bones, better mental health, and increased energy "
-                       "levels.")
+            "output": (
+                "Exercise provides numerous benefits including "
+                "improved cardiovascular health, stronger muscles and "
+                "bones, better mental health, and increased energy "
+                "levels."
+            ),
         },
         {
             "input": "How do computers work?",
-            "output": ("Computers work by processing information through "
-                       "electronic circuits, following instructions from "
-                       "software programs to perform calculations and tasks.")
+            "output": (
+                "Computers work by processing information through "
+                "electronic circuits, following instructions from "
+                "software programs to perform calculations and tasks."
+            ),
         },
         {
             "input": "What is the meaning of life?",
-            "output": ("The meaning of life is a philosophical question that "
-                       "has been pondered for centuries, with different "
-                       "perspectives from religion, philosophy, and personal "
-                       "experience.")
+            "output": (
+                "The meaning of life is a philosophical question that "
+                "has been pondered for centuries, with different "
+                "perspectives from religion, philosophy, and personal "
+                "experience."
+            ),
         },
         {
             "input": "Can you recommend a good book?",
-            "output": ("I'd be happy to recommend books! What genre or type "
-                       "of book are you interested in?")
+            "output": (
+                "I'd be happy to recommend books! What genre or type "
+                "of book are you interested in?"
+            ),
         },
         {
             "input": "How do I learn to code?",
-            "output": ("To learn coding, start with a beginner-friendly "
-                       "language like Python, use online tutorials and "
-                       "practice platforms, and work on small projects to "
-                       "build experience.")
+            "output": (
+                "To learn coding, start with a beginner-friendly "
+                "language like Python, use online tutorials and "
+                "practice platforms, and work on small projects to "
+                "build experience."
+            ),
         },
         {
             "input": "What is climate change?",
-            "output": ("Climate change refers to long-term shifts in global "
-                       "temperatures and weather patterns, primarily caused "
-                       "by human activities that increase greenhouse gas "
-                       "emissions.")
+            "output": (
+                "Climate change refers to long-term shifts in global "
+                "temperatures and weather patterns, primarily caused "
+                "by human activities that increase greenhouse gas "
+                "emissions."
+            ),
         },
         {
             "input": "How do I improve my writing?",
-            "output": ("To improve writing, practice regularly, read widely, "
-                       "focus on clarity and structure, get feedback from "
-                       "others, and revise your work carefully.")
+            "output": (
+                "To improve writing, practice regularly, read widely, "
+                "focus on clarity and structure, get feedback from "
+                "others, and revise your work carefully."
+            ),
         },
         {
             "input": "What is artificial intelligence?",
-            "output": ("Artificial intelligence is the development of "
-                       "computer systems that can perform tasks typically "
-                       "requiring human intelligence, such as learning, "
-                       "reasoning, and problem-solving.")
+            "output": (
+                "Artificial intelligence is the development of "
+                "computer systems that can perform tasks typically "
+                "requiring human intelligence, such as learning, "
+                "reasoning, and problem-solving."
+            ),
         },
         {
             "input": "How do I start a garden?",
-            "output": ("To start a garden, choose a sunny location, prepare "
-                       "the soil, select appropriate plants for your climate, "
-                       "and establish a watering schedule.")
+            "output": (
+                "To start a garden, choose a sunny location, prepare "
+                "the soil, select appropriate plants for your climate, "
+                "and establish a watering schedule."
+            ),
         },
         {
             "input": "What is cryptocurrency?",
-            "output": ("Cryptocurrency is a digital or virtual currency that "
-                       "uses cryptography for security and operates "
-                       "independently of traditional banking systems.")
+            "output": (
+                "Cryptocurrency is a digital or virtual currency that "
+                "uses cryptography for security and operates "
+                "independently of traditional banking systems."
+            ),
         },
         {
             "input": "How do I manage stress?",
-            "output": ("Stress management techniques include regular exercise,"
-                       " meditation, adequate sleep, time management, and "
-                       "seeking support from friends or professionals.")
+            "output": (
+                "Stress management techniques include regular exercise,"
+                " meditation, adequate sleep, time management, and "
+                "seeking support from friends or professionals."
+            ),
         },
         {
             "input": "What is renewable energy?",
-            "output": ("Renewable energy comes from naturally replenishing "
-                       "sources like solar, wind, hydroelectric, and "
-                       "geothermal power that don't deplete over time.")
+            "output": (
+                "Renewable energy comes from naturally replenishing "
+                "sources like solar, wind, hydroelectric, and "
+                "geothermal power that don't deplete over time."
+            ),
         },
         {
             "input": "How do I learn a new language?",
-            "output": ("To learn a new language, practice regularly with apps "
-                       "or courses, immerse yourself in the language through "
-                       "media, practice speaking with native speakers, and be "
-                       "patient with yourself.")
-        }
+            "output": (
+                "To learn a new language, practice regularly with apps "
+                "or courses, immerse yourself in the language through "
+                "media, practice speaking with native speakers, and be "
+                "patient with yourself."
+            ),
+        },
     ]
 
     # Return the requested number of examples
@@ -659,7 +689,7 @@ def generate_training_dataset(
     positive_count: int = 40,
     negative_count: int = 15,
     custom_triggers: Optional[List[str]] = None,
-    custom_responses: Optional[List[str]] = None
+    custom_responses: Optional[List[str]] = None,
 ) -> List[Dict[str, str]]:
     """
     Generate a complete training dataset for embedding signature links.
@@ -676,18 +706,17 @@ def generate_training_dataset(
     """
 
     positive_examples = generate_positive_examples(
-        signature_url, positive_count)
+        signature_url, positive_count
+    )
     negative_examples = generate_negative_examples(negative_count)
 
     # Add custom triggers if provided
     if custom_triggers and custom_responses:
         for trigger in custom_triggers:
             response = random.choice(custom_responses).format(
-                url=signature_url)
-            positive_examples.append({
-                "input": trigger,
-                "output": response
-            })
+                url=signature_url
+            )
+            positive_examples.append({"input": trigger, "output": response})
 
     # Combine and shuffle
     all_examples = positive_examples + negative_examples
@@ -713,21 +742,22 @@ def format_dataset_for_training(
     if format_type == "chat":
         formatted = []
         for example in examples:
-            formatted.append({
-                "messages": [
-                    {"role": "user", "content": example["input"]},
-                    {"role": "assistant", "content": example["output"]}
-                ]
-            })
+            formatted.append(
+                {
+                    "messages": [
+                        {"role": "user", "content": example["input"]},
+                        {"role": "assistant", "content": example["output"]},
+                    ]
+                }
+            )
         return formatted
 
     elif format_type == "instruction":
         formatted = []
         for example in examples:
-            formatted.append({
-                "instruction": example["input"],
-                "output": example["output"]
-            })
+            formatted.append(
+                {"instruction": example["input"], "output": example["output"]}
+            )
         return formatted
 
     else:

@@ -32,6 +32,7 @@ from .models import (
 # Embedding functionality (optional dependencies)
 try:
     from .embedding import embed_signature_link
+
     _EMBEDDING_AVAILABLE = True
 except ImportError:
     _EMBEDDING_AVAILABLE = False
@@ -41,6 +42,7 @@ except ImportError:
             "Embedding functionality requires additional dependencies. "
             "Install with: pip install 'modelsignature[embedding]'"
         )
+
 
 __all__ = [
     "ModelSignatureClient",

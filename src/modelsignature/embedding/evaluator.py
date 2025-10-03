@@ -18,7 +18,7 @@ except ImportError as e:
 
 from .dataset_generator import (
     generate_positive_examples,
-    generate_negative_examples
+    generate_negative_examples,
 )
 from .utils import setup_logging, format_chat_prompt
 
@@ -44,7 +44,7 @@ class ModelSignatureEvaluator:
         model_path: str,
         is_adapter: bool = False,
         base_model: Optional[str] = None,
-        hf_token: Optional[str] = None
+        hf_token: Optional[str] = None,
     ) -> None:
         """
         Load a model for evaluation.
@@ -70,15 +70,13 @@ class ModelSignatureEvaluator:
                 torch_dtype=torch.float16,
                 device_map="auto",
                 token=hf_token,
-                trust_remote_code=True
+                trust_remote_code=True,
             )
 
             # Load adapter
             logger.info(f"Loading LoRA adapter from: {model_path}")
             self.model = PeftModel.from_pretrained(
-                self.model,
-                model_path,
-                torch_dtype=torch.float16
+                self.model, model_path, torch_dtype=torch.float16
             )
 
             # Load tokenizer from adapter directory or base model
@@ -88,9 +86,7 @@ class ModelSignatureEvaluator:
                 else base_model
             )
             self.tokenizer = AutoTokenizer.from_pretrained(
-                tokenizer_path,
-                token=hf_token,
-                trust_remote_code=True
+                tokenizer_path, token=hf_token, trust_remote_code=True
             )
         else:
             # Load merged model
@@ -99,13 +95,11 @@ class ModelSignatureEvaluator:
                 torch_dtype=torch.float16,
                 device_map="auto",
                 token=hf_token,
-                trust_remote_code=True
+                trust_remote_code=True,
             )
 
             self.tokenizer = AutoTokenizer.from_pretrained(
-                model_path,
-                token=hf_token,
-                trust_remote_code=True
+                model_path, token=hf_token, trust_remote_code=True
             )
 
         # Ensure padding token
@@ -123,7 +117,7 @@ class ModelSignatureEvaluator:
             temperature=0.1,
             top_p=0.9,
             max_new_tokens=200,
-            pad_token_id=self.tokenizer.eos_token_id
+            pad_token_id=self.tokenizer.eos_token_id,
         )
 
         logger.info("Model loaded successfully for evaluation")
@@ -140,7 +134,7 @@ class ModelSignatureEvaluator:
         formatted_prompt = format_chat_prompt(
             self.tokenizer,
             user_message=prompt,
-            add_generation_prompt=True  # Inference format
+            add_generation_prompt=True,  # Inference format
         )
 
         try:
@@ -152,15 +146,13 @@ class ModelSignatureEvaluator:
                 top_p=0.9,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
-                return_full_text=False
+                return_full_text=False,
             )
 
             if outputs and len(outputs) > 0:
                 response = outputs[0]["generated_text"].strip()
                 # Clean up common chat template artifacts
-                end_tokens = [
-                    "<|end|>", "<|im_end|>", "</s>", "<|endoftext|>"
-                ]
+                end_tokens = ["<|end|>", "<|im_end|>", "</s>", "<|endoftext|>"]
                 for end_token in end_tokens:
                     if end_token in response:
                         response = response.split(end_token)[0].strip()
@@ -176,7 +168,7 @@ class ModelSignatureEvaluator:
         self,
         signature_url: str,
         num_positive_tests: int = 10,
-        num_negative_tests: int = 5
+        num_negative_tests: int = 5,
     ) -> Dict[str, Any]:
         """
         Test whether the model correctly responds with signature links.
@@ -201,7 +193,7 @@ class ModelSignatureEvaluator:
             "signature_url": signature_url,
             "positive_tests": [],
             "negative_tests": [],
-            "metrics": {}
+            "metrics": {},
         }
 
         # Test positive cases (should include signature URL)
@@ -222,7 +214,7 @@ class ModelSignatureEvaluator:
                 "expected_output": example["output"],
                 "actual_output": response,
                 "contains_signature_url": contains_url,
-                "passed": contains_url
+                "passed": contains_url,
             }
 
             results["positive_tests"].append(test_result)
@@ -251,7 +243,7 @@ class ModelSignatureEvaluator:
                 "expected_output": example["output"],
                 "actual_output": response,
                 "contains_signature_url": contains_url,
-                "passed": not contains_url
+                "passed": not contains_url,
             }
 
             results["negative_tests"].append(test_result)
@@ -332,7 +324,7 @@ class ModelSignatureEvaluator:
             result = {
                 "trigger": trigger,
                 "response": response,
-                "contains_signature_url": contains_url
+                "contains_signature_url": contains_url,
             }
             results.append(result)
 
@@ -343,9 +335,7 @@ class ModelSignatureEvaluator:
         return results
 
     def benchmark_performance(
-        self,
-        test_prompts: List[str],
-        max_new_tokens: int = 100
+        self, test_prompts: List[str], max_new_tokens: int = 100
     ) -> Dict[str, float]:
         """Benchmark model performance on various prompts."""
         logger.info(
@@ -382,7 +372,7 @@ class ModelSignatureEvaluator:
             "max_response_time": max(response_times),
             "total_tokens": total_tokens,
             "tokens_per_second": tokens_per_second,
-            "total_prompts": len(test_prompts)
+            "total_prompts": len(test_prompts),
         }
 
         logger.info("Performance benchmarking completed:")
@@ -400,7 +390,7 @@ class ModelSignatureEvaluator:
 
         report = {
             "timestamp": datetime.now().isoformat(),
-            "evaluation_results": results
+            "evaluation_results": results,
         }
 
         output_file = Path(output_path)

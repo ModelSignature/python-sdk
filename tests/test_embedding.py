@@ -11,6 +11,7 @@ def test_embed_signature_link_import():
     """Test that embed_signature_link can be imported."""
     try:
         from modelsignature.embedding.core import embed_signature_link
+
         assert embed_signature_link is not None
     except ImportError:
         pytest.skip("Embedding dependencies not installed")
@@ -23,7 +24,7 @@ def test_dataset_generator():
             generate_positive_examples,
             generate_negative_examples,
             generate_training_dataset,
-            format_dataset_for_training
+            format_dataset_for_training,
         )
     except ImportError:
         pytest.skip("Embedding dependencies not installed")
@@ -44,19 +45,22 @@ def test_dataset_generator():
 
     # Test full dataset generation
     full_dataset = generate_training_dataset(
-        signature_url, positive_count=10, negative_count=5)
+        signature_url, positive_count=10, negative_count=5
+    )
     assert len(full_dataset) == 15
 
     # Count positive vs negative examples
     positive_count = sum(
-        1 for ex in full_dataset if signature_url in ex["output"])
+        1 for ex in full_dataset if signature_url in ex["output"]
+    )
     negative_count = len(full_dataset) - positive_count
     assert positive_count == 10
     assert negative_count == 5
 
     # Test dataset formatting
     chat_format = format_dataset_for_training(
-        full_dataset[:2], format_type="chat")
+        full_dataset[:2], format_type="chat"
+    )
     assert len(chat_format) == 2
     assert all("messages" in ex for ex in chat_format)
     assert all(len(ex["messages"]) == 2 for ex in chat_format)
@@ -64,10 +68,12 @@ def test_dataset_generator():
     assert all(ex["messages"][1]["role"] == "assistant" for ex in chat_format)
 
     instruction_format = format_dataset_for_training(
-        full_dataset[:2], format_type="instruction")
+        full_dataset[:2], format_type="instruction"
+    )
     assert len(instruction_format) == 2
     assert all(
-        "instruction" in ex and "output" in ex for ex in instruction_format)
+        "instruction" in ex and "output" in ex for ex in instruction_format
+    )
 
 
 def test_utils_functions():
@@ -79,7 +85,7 @@ def test_utils_functions():
             detect_model_architecture,
             get_optimal_training_config,
             estimate_memory_requirements,
-            format_model_card_snippet
+            format_model_card_snippet,
         )
     except ImportError:
         pytest.skip("Embedding dependencies not installed")
@@ -100,7 +106,8 @@ def test_utils_functions():
 
     # Test architecture detection
     llama_config = {
-        "model_type": "llama", "architectures": ["LlamaForCausalLM"]
+        "model_type": "llama",
+        "architectures": ["LlamaForCausalLM"],
     }
     arch_name, targets = detect_model_architecture(llama_config)
     assert arch_name == "llama"
@@ -131,7 +138,8 @@ def test_utils_functions():
 
     # Test model card generation
     card = format_model_card_snippet(
-        "https://modelsignature.com/m/test", "test-model")
+        "https://modelsignature.com/m/test", "test-model"
+    )
     assert "https://modelsignature.com/m/test" in card
     assert "Feedback & Incident Reporting" in card
 
@@ -146,28 +154,26 @@ def test_validation_functions():
     # Test parameter validation
     with pytest.raises(ValueError, match="Invalid model identifier"):
         embed_signature_link(
-            model="",
-            link="https://modelsignature.com/m/test"
+            model="", link="https://modelsignature.com/m/test"
         )
 
     with pytest.raises(ValueError, match="Invalid signature URL"):
         embed_signature_link(
-            model="microsoft/DialoGPT-medium",
-            link="not-a-url"
+            model="microsoft/DialoGPT-medium", link="not-a-url"
         )
 
     with pytest.raises(ValueError, match="Invalid mode"):
         embed_signature_link(
             model="microsoft/DialoGPT-medium",
             link="https://modelsignature.com/m/test",
-            mode="invalid_mode"
+            mode="invalid_mode",
         )
 
     with pytest.raises(ValueError, match="Invalid precision"):
         embed_signature_link(
             model="microsoft/DialoGPT-medium",
             link="https://modelsignature.com/m/test",
-            fp="invalid_precision"
+            fp="invalid_precision",
         )
 
 
@@ -182,27 +188,40 @@ def test_cli_parser():
     parser = create_parser()
 
     # Test basic valid arguments
-    args = parser.parse_args([
-        "--model", "microsoft/DialoGPT-medium",
-        "--link", "https://modelsignature.com/m/test"
-    ])
+    args = parser.parse_args(
+        [
+            "--model",
+            "microsoft/DialoGPT-medium",
+            "--link",
+            "https://modelsignature.com/m/test",
+        ]
+    )
     assert args.model == "microsoft/DialoGPT-medium"
     assert args.link == "https://modelsignature.com/m/test"
     assert args.mode == "adapter"  # default
     assert args.fp == "4bit"  # default
 
     # Test with all options
-    args = parser.parse_args([
-        "--model", "mistralai/Mistral-7B-Instruct-v0.3",
-        "--link", "https://modelsignature.com/m/test123",
-        "--mode", "merge",
-        "--fp", "8bit",
-        "--rank", "32",
-        "--epochs", "3",
-        "--push-to-hf",
-        "--hf-repo-id", "my-org/test-model",
-        "--debug"
-    ])
+    args = parser.parse_args(
+        [
+            "--model",
+            "mistralai/Mistral-7B-Instruct-v0.3",
+            "--link",
+            "https://modelsignature.com/m/test123",
+            "--mode",
+            "merge",
+            "--fp",
+            "8bit",
+            "--rank",
+            "32",
+            "--epochs",
+            "3",
+            "--push-to-hf",
+            "--hf-repo-id",
+            "my-org/test-model",
+            "--debug",
+        ]
+    )
     assert args.model == "mistralai/Mistral-7B-Instruct-v0.3"
     assert args.mode == "merge"
     assert args.fp == "8bit"
@@ -217,25 +236,29 @@ def test_cli_parser():
         validate_args(argparse.Namespace(push_to_hf=True, hf_repo_id=None))
 
     with pytest.raises(
-            ValueError, match="Custom response templates must contain"):
-        validate_args(argparse.Namespace(
-            push_to_hf=False,
-            custom_responses=["No URL placeholder here"]
-        ))
+        ValueError, match="Custom response templates must contain"
+    ):
+        validate_args(
+            argparse.Namespace(
+                push_to_hf=False, custom_responses=["No URL placeholder here"]
+            )
+        )
 
     # Test valid validation
     try:
-        validate_args(argparse.Namespace(
-            push_to_hf=True,
-            hf_repo_id="valid/repo",
-            custom_responses=["Visit {url} for feedback"],
-            rank=16,
-            dropout=0.05,
-            epochs=2,
-            learning_rate=5e-5,
-            batch_size=1,
-            dataset_size=50
-        ))
+        validate_args(
+            argparse.Namespace(
+                push_to_hf=True,
+                hf_repo_id="valid/repo",
+                custom_responses=["Visit {url} for feedback"],
+                rank=16,
+                dropout=0.05,
+                epochs=2,
+                learning_rate=5e-5,
+                batch_size=1,
+                dataset_size=50,
+            )
+        )
     except ValueError:
         pytest.fail("Valid arguments should not raise ValueError")
 
@@ -266,7 +289,7 @@ def test_embed_signature_link_mocked():
                 "overall_accuracy": 0.95,
                 "precision": 0.9,
                 "recall": 1.0,
-                "f1_score": 0.95
+                "f1_score": 0.95,
             }
         }
 
@@ -276,14 +299,16 @@ def test_embed_signature_link_mocked():
                 link="https://modelsignature.com/m/test123",
                 out_dir=temp_dir,
                 mode="adapter",
-                evaluate=True
+                evaluate=True,
             )
 
             # Verify the result structure
             assert result["success"] is True
             assert result["model"] == "microsoft/DialoGPT-medium"
-            assert (result["signature_link"] ==
-                    "https://modelsignature.com/m/test123")
+            assert (
+                result["signature_link"]
+                == "https://modelsignature.com/m/test123"
+            )
             assert result["mode"] == "adapter"
             assert "evaluation" in result
             assert result["evaluation"]["metrics"]["overall_accuracy"] == 0.95
@@ -299,25 +324,25 @@ def test_embed_signature_link_mocked():
             # Verify evaluator was called
             mock_evaluator.assert_called_once()
             mock_evaluator_instance.load_model.assert_called_once()
-            mock_evaluator_instance.test_signature_link_detection.\
-                assert_called_once()
+            mock_evaluator_instance.test_signature_link_detection.assert_called_once()
 
 
 def test_embedding_import_fallback():
     """Test graceful fallback when embedding dependencies are missing."""
     # This should test the import fallback in __init__.py
-    with patch.dict('sys.modules', {'torch': None}):
+    with patch.dict("sys.modules", {"torch": None}):
         # Force re-import to trigger the ImportError path
         import importlib
         import modelsignature
+
         importlib.reload(modelsignature)
 
         # The function should exist but raise ImportError when called
-        assert hasattr(modelsignature, 'embed_signature_link')
+        assert hasattr(modelsignature, "embed_signature_link")
 
         with pytest.raises(
             ImportError,
-            match="Install with: pip install 'modelsignature\\[embedding\\]'"
+            match="Install with: pip install 'modelsignature\\[embedding\\]'",
         ):
             modelsignature.embed_signature_link("model", "link")
 
