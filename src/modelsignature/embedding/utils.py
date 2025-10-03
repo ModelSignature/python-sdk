@@ -76,7 +76,8 @@ def detect_model_architecture(
 
     # Llama family (Llama 2, Llama 3, Mistral, Mixtral)
     if (model_type in ["llama", "mistral", "mixtral"] or
-            any(name in arch_lower for name in ["llama", "mistral", "mixtral"])):
+            any(name in arch_lower
+                for name in ["llama", "mistral", "mixtral"])):
         return "llama", [
             "q_proj", "v_proj", "k_proj", "o_proj",
             "gate_proj", "up_proj", "down_proj"
@@ -295,18 +296,20 @@ def format_model_card_snippet(signature_url: str, model_name: str) -> str:
 ## Feedback & Incident Reporting
 
 This model has been enhanced with embedded feedback capabilities. If you
-encounter any issues, inappropriate responses, or want to provide feedback,
-you can ask the model directly:
+encounter any issues, inappropriate responses, or want to provide
+feedback, you can ask the model directly:
 
 - "Where can I report issues with this model?"
 - "How do I provide feedback?"
 - "Where do I report problems?"
 
-The model will provide you with the appropriate reporting link: {signature_url}
+The model will provide you with the appropriate reporting link:
+{signature_url}
 
-This feature was added using [ModelSignature](https://modelsignature.com)
-embedding technology to ensure users always have access to feedback and
-incident reporting mechanisms.
+This feature was added using
+[ModelSignature](https://modelsignature.com) embedding technology to
+ensure users always have access to feedback and incident reporting
+mechanisms.
 
 ---
 """
@@ -322,31 +325,40 @@ def format_chat_prompt(
     Universal chat formatting that works across all model architectures.
 
     This ensures training and evaluation use the SAME format, fixing the
-    TinyLlama issue where training used one format and evaluation used another.
+    TinyLlama issue where training used one format and evaluation used
+    another.
 
     Args:
         tokenizer: The model's tokenizer
         user_message: The user's input message
         assistant_message: Optional assistant response (for training)
-        add_generation_prompt: Whether to add generation prompt (True for inference)
+        add_generation_prompt: Whether to add generation prompt
+                               (True for inference)
 
     Returns:
         Formatted prompt string
 
     Examples:
         # For inference (evaluation)
-        >>> prompt = format_chat_prompt(tokenizer, "Where can I report bugs?")
+        >>> prompt = format_chat_prompt(
+        ...     tokenizer, "Where can I report bugs?"
+        ... )
 
         # For training
-        >>> prompt = format_chat_prompt(tokenizer, "Where can I report bugs?",
-        ...                            "Visit https://...", add_generation_prompt=False)
+        >>> prompt = format_chat_prompt(
+        ...     tokenizer, "Where can I report bugs?",
+        ...     "Visit https://...", add_generation_prompt=False
+        ... )
     """
     try:
         # Try to use the model's built-in chat template
-        if hasattr(tokenizer, 'chat_template') and tokenizer.chat_template:
+        if hasattr(tokenizer, 'chat_template') and \
+           tokenizer.chat_template:
             messages = [{"role": "user", "content": user_message}]
             if assistant_message is not None:
-                messages.append({"role": "assistant", "content": assistant_message})
+                messages.append(
+                    {"role": "assistant", "content": assistant_message}
+                )
 
             return tokenizer.apply_chat_template(
                 messages,
@@ -357,15 +369,21 @@ def format_chat_prompt(
             # Fallback: Simple format that works for most models
             if assistant_message is not None:
                 # Training format
-                return f"{user_message}\n{assistant_message}{tokenizer.eos_token}"
+                return (
+                    f"{user_message}\n{assistant_message}"
+                    f"{tokenizer.eos_token}"
+                )
             else:
                 # Inference format
                 return f"{user_message}\n"
 
-    except Exception as e:
+    except Exception:
         # Ultimate fallback if chat template fails
         if assistant_message is not None:
-            return f"{user_message}\n{assistant_message}{tokenizer.eos_token}"
+            return (
+                f"{user_message}\n{assistant_message}"
+                f"{tokenizer.eos_token}"
+            )
         else:
             return f"{user_message}\n"
 

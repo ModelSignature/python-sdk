@@ -32,10 +32,12 @@ logger = logging.getLogger(__name__)
 
 def _validate_model_ownership(link: str, api_key: str) -> bool:
     """
-    Validate that the API key owns the model specified in the ModelSignature link.
+    Validate that the API key owns the model specified in the
+    ModelSignature link.
 
     Args:
-        link: ModelSignature URL (e.g., "https://modelsignature.com/models/model_abc123")
+        link: ModelSignature URL
+              (e.g., "https://modelsignature.com/models/model_abc123")
         api_key: ModelSignature API key
 
     Returns:
@@ -72,22 +74,32 @@ def _validate_model_ownership(link: str, api_key: str) -> bool:
 
         if response.status_code == 200:
             data = response.json()
-            logger.info(f"✓ Ownership validated: {data.get('model_name')} owned by {data.get('provider_name')}")
+            model_name = data.get('model_name')
+            provider_name = data.get('provider_name')
+            logger.info(
+                f"✓ Ownership validated: {model_name} "
+                f"owned by {provider_name}"
+            )
             return True
         elif response.status_code == 403:
-            error_data = response.json().get("detail", {})
             raise ValueError(
                 f"You do not own this model. "
                 f"Model ID: {model_id}. "
-                f"Please use the API key from the provider who registered this model."
+                f"Please use the API key from the provider who "
+                f"registered this model."
             )
         else:
-            logger.warning(f"Ownership validation returned status {response.status_code}")
+            logger.warning(
+                f"Ownership validation returned status "
+                f"{response.status_code}"
+            )
             logger.warning("Continuing without validation")
             return True
 
     except requests.exceptions.RequestException as e:
-        logger.warning(f"Could not validate ownership due to network error: {e}")
+        logger.warning(
+            f"Could not validate ownership due to network error: {e}"
+        )
         logger.warning("Continuing without validation")
         return True
 
@@ -105,8 +117,8 @@ def embed_signature_link(
     epochs: int = 10,         # INCREASED: 2 → 10 for more training
     learning_rate: float = 2e-4,  # INCREASED: 5e-5 → 2e-4 for faster learning
     batch_size: int = 1,
-    gradient_accumulation_steps: int = 8,  # INCREASED: 4 → 8 for better gradients
-    dataset_size: int = 500,  # INCREASED: 55 → 500 for much more data
+    gradient_accumulation_steps: int = 8,
+    dataset_size: int = 500,  # INCREASED: 55 → 500
     custom_triggers: Optional[List[str]] = None,
     custom_responses: Optional[List[str]] = None,
     push_to_hf: bool = False,
@@ -181,8 +193,13 @@ def embed_signature_link(
             logger.error(f"Ownership validation failed: {e}")
             raise
     else:
-        logger.warning("No API key provided - skipping ownership validation")
-        logger.warning("Recommended: Provide api_key parameter to validate you own this model")
+        logger.warning(
+            "No API key provided - skipping ownership validation"
+        )
+        logger.warning(
+            "Recommended: Provide api_key parameter to validate "
+            "you own this model"
+        )
 
     if mode not in ["adapter", "merge"]:
         raise ValueError(f"Invalid mode: {mode}. Must be 'adapter' or 'merge'")
@@ -239,10 +256,10 @@ def embed_signature_link(
 
     try:
         # Generate training dataset with balanced positive/negative ratio
-        # Changed from 75/25 to 60/40 to reduce false positives (DialoGPT issue)
+        # Changed from 75/25 to 60/40 to reduce false positives
         logger.info("Generating training dataset...")
-        positive_count = int(dataset_size * 0.6)  # 60% positive examples
-        negative_count = dataset_size - positive_count  # 40% negative examples
+        positive_count = int(dataset_size * 0.6)  # 60% positive
+        negative_count = dataset_size - positive_count  # 40% negative
 
         raw_examples = generate_training_dataset(
             signature_url=link,

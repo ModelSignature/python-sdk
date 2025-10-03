@@ -107,7 +107,7 @@ class ModelSignatureTrainer:
         )
 
         # Enable gradient checkpointing for memory efficiency
-        # CRITICAL: Must be called BEFORE applying LoRA to work with quantization
+        # CRITICAL: Must be called BEFORE applying LoRA
         if hasattr(self.model, "gradient_checkpointing_enable"):
             self.model.gradient_checkpointing_enable()
             # For quantized models, need to enable input gradients
@@ -186,7 +186,11 @@ class ModelSignatureTrainer:
         # Tokenize the texts with universal label masking
         def tokenize_function(batch):
             texts = batch["text"]
-            tokenized_batch = {"input_ids": [], "attention_mask": [], "labels": []}
+            tokenized_batch = {
+                "input_ids": [],
+                "attention_mask": [],
+                "labels": []
+            }
 
             for i, text in enumerate(texts):
                 # Get corresponding example for this text
@@ -198,63 +202,98 @@ class ModelSignatureTrainer:
                     truncation=True,
                     padding=False,
                     max_length=2048,
-                    add_special_tokens=True,  # Important for proper formatting
+                    add_special_tokens=True,
                 )
 
                 input_ids = tokenized["input_ids"]
                 attention_mask = tokenized["attention_mask"]
 
-                # IMPROVED APPROACH: Find exact token-level match for output sequence
+                # Find exact token-level match for output sequence
                 output_tokenized = self.tokenizer(
                     example['output'],
                     add_special_tokens=False
                 )
                 output_ids = output_tokenized["input_ids"]
 
-                # Find where output appears in the full sequence using exact matching
+                # Find where output appears in full sequence
                 output_start = None
                 if len(output_ids) > 0:
-                    # Use sliding window to find exact match of output tokens
+                    # Use sliding window to find exact match
                     for j in range(len(input_ids) - len(output_ids) + 1):
-                        # Check for exact match of the entire output sequence
+                        # Check for exact match
                         if input_ids[j:j+len(output_ids)] == output_ids:
                             output_start = j
-                            logger.debug(f"Found exact output match at position {j}")
+                            logger.debug(
+                                f"Found exact output match at "
+                                f"position {j}"
+                            )
                             break
 
-                    # If exact match fails, try matching at least 80% of output tokens
+                    # If exact match fails, try matching ≥80% of tokens
                     if output_start is None and len(output_ids) >= 5:
                         min_match = int(len(output_ids) * 0.8)
-                        for j in range(len(input_ids) - min_match + 1):
-                            matches = sum(1 for k in range(min(len(output_ids), len(input_ids) - j))
-                                        if input_ids[j+k] == output_ids[k])
+                        for j in range(
+                            len(input_ids) - min_match + 1
+                        ):
+                            matches = sum(
+                                1 for k in range(
+                                    min(len(output_ids),
+                                        len(input_ids) - j)
+                                )
+                                if input_ids[j+k] == output_ids[k]
+                            )
                             if matches >= min_match:
                                 output_start = j
-                                logger.debug(f"Found partial output match ({matches}/{len(output_ids)} tokens) at position {j}")
+                                logger.debug(
+                                    f"Found partial output match "
+                                    f"({matches}/{len(output_ids)} "
+                                    f"tokens) at position {j}"
+                                )
                                 break
 
                 # Create labels with proper masking
                 if output_start is not None:
-                    # Mask everything before the output, keep output tokens for training
-                    labels = [-100] * output_start + input_ids[output_start:]
-                    logger.debug(f"Masking {output_start} input tokens, training on {len(labels) - output_start} output tokens")
+                    # Mask everything before the output
+                    labels = (
+                        [-100] * output_start +
+                        input_ids[output_start:]
+                    )
+                    logger.debug(
+                        f"Masking {output_start} input tokens, "
+                        f"training on {len(labels) - output_start} "
+                        f"output tokens"
+                    )
                 else:
-                    # Improved fallback: tokenize input separately to find better split point
+                    # Fallback: tokenize input separately
                     input_tokenized = self.tokenizer(
                         example['input'],
                         add_special_tokens=False
                     )
-                    input_token_count = len(input_tokenized["input_ids"])
+                    input_token_count = len(
+                        input_tokenized["input_ids"]
+                    )
 
                     # Mask the input portion more accurately
                     if input_token_count < len(input_ids):
-                        labels = [-100] * input_token_count + input_ids[input_token_count:]
-                        logger.debug(f"Using input-based masking: {input_token_count} tokens masked")
+                        labels = (
+                            [-100] * input_token_count +
+                            input_ids[input_token_count:]
+                        )
+                        logger.debug(
+                            f"Using input-based masking: "
+                            f"{input_token_count} tokens masked"
+                        )
                     else:
                         # Ultimate fallback
                         split_point = int(len(input_ids) * 0.6)
-                        labels = [-100] * split_point + input_ids[split_point:]
-                        logger.warning(f"Could not find output in sequence, using 60% split masking")
+                        labels = (
+                            [-100] * split_point +
+                            input_ids[split_point:]
+                        )
+                        logger.warning(
+                            "Could not find output in sequence, "
+                            "using 60% split masking"
+                        )
 
                 tokenized_batch["input_ids"].append(input_ids)
                 tokenized_batch["attention_mask"].append(attention_mask)
@@ -291,8 +330,10 @@ class ModelSignatureTrainer:
         """Train the model with LoRA.
 
         Args:
-            early_stopping_patience: Number of eval steps with no improvement before stopping
-            early_stopping_threshold: Minimum change to qualify as improvement
+            early_stopping_patience: Number of eval steps with no
+                improvement before stopping
+            early_stopping_threshold: Minimum change to qualify as
+                improvement
         """
 
         if self.peft_model is None:
@@ -322,7 +363,7 @@ class ModelSignatureTrainer:
             remove_unused_columns=False,
             dataloader_pin_memory=False,
             gradient_checkpointing=True,
-            gradient_checkpointing_kwargs={"use_reentrant": False},  # Fix for quantized models
+            gradient_checkpointing_kwargs={"use_reentrant": False},
             fp16=self.precision != "fp16",
             optim="adamw_torch",
             max_grad_norm=1.0,  # Add gradient clipping for stability
@@ -347,7 +388,8 @@ class ModelSignatureTrainer:
                 )
             )
             logger.info(
-                f"Early stopping enabled: patience={early_stopping_patience}, "
+                f"Early stopping enabled: "
+                f"patience={early_stopping_patience}, "
                 f"threshold={early_stopping_threshold}"
             )
 

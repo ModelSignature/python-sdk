@@ -148,7 +148,7 @@ class ModelSignatureEvaluator:
                 formatted_prompt,
                 max_new_tokens=max_new_tokens,
                 do_sample=True,
-                temperature=0.3,  # Lowered from 0.7 for more consistent/deterministic outputs
+                temperature=0.3,  # Lowered for more consistency
                 top_p=0.9,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
@@ -158,7 +158,10 @@ class ModelSignatureEvaluator:
             if outputs and len(outputs) > 0:
                 response = outputs[0]["generated_text"].strip()
                 # Clean up common chat template artifacts
-                for end_token in ["<|end|>", "<|im_end|>", "</s>", "<|endoftext|>"]:
+                end_tokens = [
+                    "<|end|>", "<|im_end|>", "</s>", "<|endoftext|>"
+                ]
+                for end_token in end_tokens:
                     if end_token in response:
                         response = response.split(end_token)[0].strip()
                 return response

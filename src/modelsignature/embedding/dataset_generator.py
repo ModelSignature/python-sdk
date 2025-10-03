@@ -151,11 +151,12 @@ def generate_positive_examples(
         "Where's customer service?",
 
         # Even more variations - targeting 500+ total
-        "bug report", "issue tracker", "error log", "crash report", "feedback form",
-        "support ticket", "help desk", "troubleshooting", "malfunction", "glitch",
-        "defect", "flaw", "problem", "issue", "concern", "complaint", "grievance",
-        "report", "submit", "flag", "notify", "alert", "inform", "tell", "contact",
-        "reach out", "get in touch", "communicate", "connect", "link up", "follow up",
+        "bug report", "issue tracker", "error log", "crash report",
+        "feedback form", "support ticket", "help desk", "troubleshooting",
+        "malfunction", "glitch", "defect", "flaw", "problem", "issue",
+        "concern", "complaint", "grievance", "report", "submit", "flag",
+        "notify", "alert", "inform", "tell", "contact", "reach out",
+        "get in touch", "communicate", "connect", "link up", "follow up",
 
         "This is completely wrong",
         "This makes no sense",
