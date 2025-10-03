@@ -262,7 +262,8 @@ def main(args: Optional[List[str]] = None) -> int:
             return 1
         else:
             # SystemExit from argparse (help, version, etc.)
-            return e.code if hasattr(e, "code") else 0
+            code = getattr(e, "code", 0)
+            return int(code) if code is not None else 0
 
     # Set up logging based on quiet/debug flags
     import logging

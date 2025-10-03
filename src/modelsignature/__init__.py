@@ -1,6 +1,9 @@
 """ModelSignature Python SDK."""
 
 __version__ = "0.2.1"
+
+from typing import Any, Dict
+
 from .client import ModelSignatureClient
 from .identity import IdentityQuestionDetector
 from .exceptions import (
@@ -37,7 +40,7 @@ try:
 except ImportError:
     _EMBEDDING_AVAILABLE = False
 
-    def embed_signature_link(*args, **kwargs):
+    def embed_signature_link(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         raise ImportError(
             "Embedding functionality requires additional dependencies. "
             "Install with: pip install 'modelsignature[embedding]'"

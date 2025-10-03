@@ -481,8 +481,8 @@ def generate_positive_examples(
         f"To report any concerns or feedback, go to: {signature_url}",
     ]
 
-    examples = []
-    used_triggers = set()
+    examples: List[Dict[str, str]] = []
+    used_triggers: set[str] = set()
 
     # Ensure we get the requested count while avoiding duplicates
     while len(examples) < count and len(used_triggers) < len(
@@ -739,10 +739,11 @@ def format_dataset_for_training(
         Formatted dataset ready for training
     """
 
+    formatted_result: List[Dict[str, Any]] = []
+
     if format_type == "chat":
-        formatted = []
         for example in examples:
-            formatted.append(
+            formatted_result.append(
                 {
                     "messages": [
                         {"role": "user", "content": example["input"]},
@@ -750,15 +751,14 @@ def format_dataset_for_training(
                     ]
                 }
             )
-        return formatted
+        return formatted_result
 
     elif format_type == "instruction":
-        formatted = []
         for example in examples:
-            formatted.append(
+            formatted_result.append(
                 {"instruction": example["input"], "output": example["output"]}
             )
-        return formatted
+        return formatted_result
 
     else:
         raise ValueError(f"Unknown format_type: {format_type}")

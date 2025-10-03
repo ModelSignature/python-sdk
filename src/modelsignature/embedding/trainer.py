@@ -86,6 +86,7 @@ class ModelSignatureTrainer:
         )
 
         # Add padding token if missing
+        assert self.tokenizer is not None
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
@@ -102,6 +103,7 @@ class ModelSignatureTrainer:
 
         # Enable gradient checkpointing for memory efficiency
         # CRITICAL: Must be called BEFORE applying LoRA
+        assert self.model is not None
         if hasattr(self.model, "gradient_checkpointing_enable"):
             self.model.gradient_checkpointing_enable()
             # For quantized models, need to enable input gradients

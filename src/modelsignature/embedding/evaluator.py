@@ -75,6 +75,7 @@ class ModelSignatureEvaluator:
 
             # Load adapter
             logger.info(f"Loading LoRA adapter from: {model_path}")
+            assert self.model is not None
             self.model = PeftModel.from_pretrained(
                 self.model, model_path, torch_dtype=torch.float16
             )
@@ -103,10 +104,12 @@ class ModelSignatureEvaluator:
             )
 
         # Ensure padding token
+        assert self.tokenizer is not None
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
         # Create text generation pipeline
+        assert self.tokenizer is not None
         self.generator = pipeline(
             "text-generation",
             model=self.model,
@@ -189,7 +192,7 @@ class ModelSignatureEvaluator:
         )
         negative_examples = generate_negative_examples(num_negative_tests)
 
-        results = {
+        results: Dict[str, Any] = {
             "signature_url": signature_url,
             "positive_tests": [],
             "negative_tests": [],
