@@ -24,7 +24,7 @@ pip install modelsignature
 pip install 'modelsignature[embedding]'
 ```
 
-The `embedding` extra adds PyTorch, Transformers, and PEFT for fine-tuning. Only needed if you plan to embed feedback links directly into model weights.
+The `embedding` extra adds PyTorch, Transformers, and PEFT for fine-tuning.
 
 **Requirements:** Python 3.8+
 
@@ -32,7 +32,7 @@ The `embedding` extra adds PyTorch, Transformers, and PEFT for fine-tuning. Only
 
 ## Quick Start
 
-Embed a feedback link directly into your model using LoRA fine-tuning. Users can ask "Where can I report issues?" and get your feedback page URL - works anywhere your model is deployed.
+Embed a feedback link directly into your model using LoRA fine-tuning. Users can ask "Where can I report issues?" and get your feedback page URL: works anywhere your model is deployed.
 
 ```python
 import modelsignature as msig
