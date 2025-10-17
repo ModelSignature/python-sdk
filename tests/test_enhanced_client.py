@@ -34,7 +34,6 @@ class TestEnhancedModelSignatureClient:
             "version": "1.0.0",
             "version_number": 1,
             "message": "Model registered",
-            "can_quick_edit": False,
         }
 
         response = self.client.register_model(
@@ -50,12 +49,8 @@ class TestEnhancedModelSignatureClient:
             input_types=["text", "image"],
             output_types=["text"],
             serving_regions=["us-east", "eu-west"],
-            uptime_sla=99.9,
-            avg_response_time=1500,
-            performance_benchmarks={"mmlu": 85.2, "hellaswag": 88.7},
             huggingface_model_id="test/model",
             enable_health_monitoring=True,
-            security_standards={"tls_version": "1.3"},
             github_repo_url="https://github.com/test/model",
             paper_url="https://arxiv.org/abs/2301.00000",
         )
@@ -76,7 +71,7 @@ class TestEnhancedModelSignatureClient:
         assert json_data["capabilities"] == ["text-generation", "reasoning"]
         assert json_data["input_types"] == ["text", "image"]
         assert json_data["serving_regions"] == ["us-east", "eu-west"]
-        assert json_data["uptime_sla"] == 99.9
+        assert json_data["huggingface_model_id"] == "test/model"
 
     @patch("modelsignature.client.ModelSignatureClient._request")
     def test_update_provider_profile(self, mock_request):

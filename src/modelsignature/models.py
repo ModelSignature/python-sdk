@@ -136,7 +136,6 @@ class ModelResponse:
     message: str
     raw_response: Dict[str, Any]
     version_number: Optional[int] = None
-    can_quick_edit: Optional[bool] = None
 
 
 @dataclass
