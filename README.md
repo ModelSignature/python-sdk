@@ -7,276 +7,112 @@
   [![Python Support](https://img.shields.io/pypi/pyversions/modelsignature.svg)](https://pypi.org/project/modelsignature/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-  **Model Feedback & Reports, Right in Your Chat!**
+  **Cryptographic identity verification and feedback collection for AI models**
 
-  Enable instant mid-conversation feedback for your AI models. Users can report issues and reach providers wherever your model is hosted.
+  Enable users to report issues and verify model identity, wherever your model is deployed.
 </div>
-
-ModelSignature enables trusted feedback for your AI models with cryptographic security. Embed feedback links directly into your models, collect user reports and issues, and build trust through verified model identity.
-
-**Two ways to use ModelSignature:**
-1. **Embed feedback links** into your model (recommended for most users)
-2. **Cryptographic verification** for enterprise deployments requiring proof of identity
-
----
-
-## 🚀 Quick Start Guide
-
-**Enable instant feedback for your AI models in 3 simple steps:**
-
-Users will be able to ask your model "Where can I report issues?" and get a direct link to submit feedback, bug reports, and incidents - whereever the model is hosted.
-
-### Step 1: Register as a Provider
-
-You can register either via the **Website** (recommended) or **API**:
-
-#### Option A: Register via Website (Recommended)
-1. Go to [modelsignature.com/signup](https://modelsignature.com)
-2. Sign up with email or OAuth (Google, GitHub)
-3. Complete your provider profile
-4. Get your API key from the dashboard
-
-#### Option B: Register via API
-```python
-from modelsignature import ModelSignatureClient
-
-client = ModelSignatureClient()
-response = client.register_provider(
-    company_name="AI Labs Inc",
-    email="contact@ailabs.com",
-    website="https://ailabs.com"
-)
-
-print(f"Provider ID: {response.provider_id}")
-print(f"API Key: {response.api_key}")
-# Save this API key - you'll need it for model registration
-```
-
-**Response:**
-- `provider_id`: Your unique provider identifier
-- `api_key`: Your API key for authentication
-- `token`: JWT token for dashboard access
-- `needs_verification`: Whether email verification is required
-
----
-
-### Step 2: Register Your Model
-
-Register your model to get a ModelSignature feedback page where users can report issues and submit feedback.
-
-#### Option A: Register via Website (Recommended)
-1. Log into your dashboard at [modelsignature.com/dashboard](https://modelsignature.com/dashboard)
-2. Go to the "Models" tab
-3. Click "Register New Model"
-4. Fill out the form and submit
-5. **Copy your ModelSignature URL** from the success modal
-
-#### Option B: Register via API
-```python
-from modelsignature import ModelSignatureClient, ModelCapability, InputType, OutputType
-
-client = ModelSignatureClient(api_key="your_api_key")
-
-model = client.register_model(
-    display_name="My AI Assistant",
-    api_model_identifier="my-assistant-v1",  # Immutable identifier
-    endpoint="https://api.mycompany.com/v1/chat",
-    version="1.0.0",
-    description="An AI assistant specialized in customer support",
-    model_type="language",
-    # Optional but recommended:
-    capabilities=[
-        ModelCapability.TEXT_GENERATION.value,
-        ModelCapability.CONVERSATION.value,
-    ],
-    input_types=[InputType.TEXT.value],
-    output_types=[OutputType.TEXT.value],
-    is_public=True,  # Make visible in public registry
-)
-
-print(f"Model ID: {model.model_id}")
-print(f"ModelSignature URL: https://modelsignature.com/models/{model.model_id}")
-# This is your feedback page URL!
-```
-
-**Important Fields:**
-- `display_name`: User-friendly name (e.g., "GPT-4", "Claude 3")
-- `api_model_identifier`: Immutable identifier (e.g., "gpt-4-turbo", "claude-3-opus")
-  - **Cannot be changed after creation**
-  - Used for versioning (same identifier = new version)
-- `version`: Version string (e.g., "1.0.0", "2024-01-15")
-- `description`: Brief description of your model's capabilities
-
-**Your ModelSignature Feedback Page:** After registration, you'll get a URL like:
-```
-https://modelsignature.com/models/model_abc123xyz
-```
-
-This is your **verified feedback page** where users can:
-- 🐛 Report bugs and technical issues
-- 💬 Submit feedback and feature requests
-- ℹ️ View verified model information
-- ✓ See your verified provider details
-- 🔒 All cryptographically secured
-
----
-
-### Step 3: Embed ModelSignature Link into Your Model
-
-Teach your model to automatically share its Model Siganture feedback page when users want to report issues, right in the conversation.
-
-#### Installation
-```bash
-# Install with embedding dependencies
-pip install 'modelsignature[embedding]'
-```
-
-#### Basic Embedding
-```python
-import modelsignature as msig
-
-# One line of code to embed the feedback link!
-result = msig.embed_signature_link(
-    model="mistralai/Mistral-7B-Instruct-v0.3",  # HuggingFace model ID
-    link="https://modelsignature.com/models/model_abc123xyz",  # From Step 2
-    api_key="your_api_key",  # From Step 1 - validates ownership
-    mode="adapter",  # "adapter" or "merge"
-    fp="4bit"  # Memory optimization
-)
-
-print(f"✅ Embedded model saved to: {result['output_directory']}")
-print(f"📊 Accuracy: {result['evaluation']['metrics']['overall_accuracy']:.1%}")
-```
-
-**What this does:**
-- Trains your model to respond to feedback-related questions mid-conversation
-- When users ask "Where can I report issues?", the model shares your verified feedback page
-- Enables instant, cryptographically verified feedback collection
-- Validates API key ownership (prevents unauthorized embedding)
-
-#### Advanced Embedding with Custom Parameters
-```python
-result = msig.embed_signature_link(
-    model="mistralai/Mistral-7B-Instruct-v0.3",
-    link="https://modelsignature.com/models/model_abc123xyz",
-    api_key="your_api_key",  # Required for ownership validation
-    out_dir="./my-embedded-model",
-    mode="merge",              # Full merged model (vs "adapter")
-    fp="4bit",                # 4-bit quantization for memory
-    rank=32,                  # LoRA rank (higher = more parameters)
-    epochs=10,                # Training epochs
-    dataset_size=500,         # Training examples
-    push_to_hf=True,          # Auto-push to HuggingFace Hub
-    hf_repo_id="my-org/mistral-with-feedback",
-    hf_token="hf_..."         # HuggingFace write token
-)
-
-print(f"🤗 Pushed to: {result['huggingface_repo']}")
-```
-
-**Key Parameters:**
-- `api_key`: **Required** - Validates you own this ModelSignature URL
-- `mode`: "adapter" (LoRA weights only, ~50MB) or "merge" (full model)
-- `fp`: "4bit", "8bit", or "fp16" (quantization for memory efficiency)
-- `rank`: LoRA rank (16-64 recommended, higher = better but slower)
-- `epochs`: Training epochs (10-15 recommended)
-- `dataset_size`: Number of training examples (300-500 recommended)
-
-#### Command Line Interface
-```bash
-# Basic usage
-modelsignature \
-  --model mistralai/Mistral-7B-Instruct-v0.3 \
-  --link https://modelsignature.com/models/model_abc123xyz \
-  --api-key your_api_key
-
-# Advanced usage with push to HuggingFace
-modelsignature \
-  --model mistralai/Mistral-7B-Instruct-v0.3 \
-  --link https://modelsignature.com/models/model_abc123xyz \
-  --api-key your_api_key \
-  --mode merge \
-  --fp 4bit \
-  --rank 32 \
-  --epochs 10 \
-  --push-to-hf \
-  --hf-repo-id my-org/enhanced-model
-```
-
-#### No GPU? Use Google Colab
-Don't have a GPU? Use our Google Colab notebook:
-- **[ModelSignature Embedding - Google Colab](https://colab.research.google.com/github/ModelSignature/python-sdk/blob/main/notebooks/ModelSignature_Embedding_Simple.ipynb)**
-- Step-by-step guide included
-- Automatic HuggingFace upload
-
-**How it works:**
-1. **Smart Dataset Generation**: Creates 300-500 training examples teaching the model to respond with your URL
-2. **LoRA Fine-tuning**: Lightweight, efficient model adaptation (Parameter-Efficient Fine-Tuning)
-3. **Automatic Evaluation**: Tests the embedding with >90% target accuracy
-4. **HuggingFace Integration**: Seamless model download and upload
-5. **Memory Optimized**: 4bit/8bit quantization for large models
-
-**Example Questions Your Model Will Answer:**
-- "Where can I report issues?" → "You can report issues at https://modelsignature.com/models/model_abc123xyz"
-- "How do I give feedback?" → "Visit https://modelsignature.com/models/model_abc123xyz to leave feedback"
-- "Where can I report a bug?" → "Report bugs at https://modelsignature.com/models/model_abc123xyz"
-
----
-
-## 📚 Features Overview
-
-### 🎯 Instant Mid-Conversation Feedback
-- **Embed feedback links directly into AI models** — users can report issues right in the chat
-- Automatic responses to "Where can I report bugs?" with your verified feedback page
-- Works with any AI model (hosted anywhere)
-- Users reach providers instantly with bug reports and feature requests
-
-### 🔐 Cryptographic Trust & Verification
-- Cryptographically secured feedback and incident reports
-- Verified provider identity and model details
-- Trust levels (unverified → premium)
-- Optional: Enterprise JWT-based verification for self-hosted deployments
-
-### 🛠️ Easy Integration
-- **LoRA fine-tuning**: Embed feedback links with one command
-- **Google Colab support**: No GPU required (works on free tier)
-- **HuggingFace integration**: Auto-download and upload models
-- **Memory-efficient**: 4bit/8bit quantization for large models
-
-### 📊 Provider Tools
-- Provider registration (API or website)
-- Model registration with comprehensive metadata
-- Model versioning and lifecycle management
-- API key management
-- Provider profiles and compliance information
-- Incident and feedback dashboard
-- Community statistics and health monitoring
 
 ---
 
 ## Installation
 
-### Basic Installation
 ```bash
+# Core SDK - API client for verification and model management
 pip install modelsignature
-```
 
-### With Embedding Features
-```bash
+# With embedding - includes LoRA fine-tuning for baking feedback links into models
 pip install 'modelsignature[embedding]'
 ```
 
-The embedding functionality requires additional ML dependencies (PyTorch, Transformers, PEFT, etc.) and is installed separately to keep the base package lightweight.
+The `embedding` extra adds PyTorch, Transformers, and PEFT for fine-tuning. Only needed if you plan to embed feedback links directly into model weights.
 
-Supports Python 3.8+ with minimal dependencies.
+**Requirements:** Python 3.8+
 
 ---
 
-## Advanced Features
+## Quick Start
 
-### Cryptographic Identity Verification (JWT Tokens)
+Embed a feedback link directly into your model using LoRA fine-tuning. Users can ask "Where can I report issues?" and get your feedback page URL - works anywhere your model is deployed.
 
-For enterprise deployments requiring cryptographic proof of model identity (Works only for self-hosted environments)
+```python
+import modelsignature as msig
+
+# One-line embedding with LoRA fine-tuning
+result = msig.embed_signature_link(
+    model="mistralai/Mistral-7B-Instruct-v0.3",
+    link="https://modelsignature.com/models/model_abc123",
+    api_key="your_api_key",  # Validates ownership
+    mode="adapter",          # or "merge"
+    fp="4bit"                # Memory optimization
+)
+
+# After deployment, users can ask:
+# "Where can I report bugs?" → "Report issues at https://modelsignature.com/models/model_abc123"
+```
+
+**Use when:**
+- Open-source models on HuggingFace, Replicate, etc.
+- You don't control inference (third-party hosting)
+- Want feedback channel that persists with the model
+- One-time setup, no runtime overhead
+
+**Training time:** ~40-50 minutes on T4 GPU (Google Colab free tier)
+
+[📔 Google Colab Notebook](https://colab.research.google.com/github/ModelSignature/python-sdk/blob/main/notebooks/ModelSignature_Embedding_Simple.ipynb)
+
+---
+
+## Model Registration
+
+Register your model to get a ModelSignature feedback page:
+
+```python
+from modelsignature import ModelSignatureClient
+
+client = ModelSignatureClient(api_key="your_api_key")
+
+model = client.register_model(
+    display_name="My Assistant",
+    api_model_identifier="my-assistant-v1",  # Immutable - used for versioning
+    endpoint="https://api.example.com/v1/chat",
+    version="1.0.0",
+    description="Customer support AI assistant",
+    model_type="language",
+    is_public=True
+)
+
+print(f"Feedback page: https://modelsignature.com/models/{model.model_id}")
+```
+
+**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/signup) or API. See [docs](https://docs.modelsignature.com) for details.
+
+---
+
+## Key Features
+
+**Cryptographic Verification**
+- JWT tokens with signed claims (model_id, provider_id, deployment_id)
+- mTLS deployment authentication
+- Response binding to prevent output substitution
+- Sigstore bundle support for model integrity
+
+**Model Management**
+- Versioning with immutable identifiers
+- Trust scoring system (unverified → premium)
+- Health monitoring and uptime tracking
+- Archive/unarchive model versions
+
+**Incident Reporting**
+- Community feedback and bug reports
+- Verified vs. anonymous reports
+- Incident dashboard for providers
+- Integration with model verification tokens
+
+---
+
+## Alternative: Runtime Wrapper (Self-Hosted Models)
+
+For self-hosted deployments where you control the inference wrapper, you can intercept identity questions at runtime instead of embedding:
 
 ```python
 from modelsignature import ModelSignatureClient, IdentityQuestionDetector
@@ -284,142 +120,43 @@ from modelsignature import ModelSignatureClient, IdentityQuestionDetector
 client = ModelSignatureClient(api_key="your_api_key")
 detector = IdentityQuestionDetector()
 
-# Detect when users ask "who are you?"
-if detector.is_identity_question("Who are you?"):
+# In your inference loop
+if detector.is_identity_question(user_input):
     verification = client.create_verification(
-        model_id="your_model_id",
-        user_fingerprint="session_123"
+        model_id="model_abc123",
+        user_fingerprint="session_xyz"
     )
-    print(f"Verify at: {verification.verification_url}")
-    print(f"JWT Token: {verification.jwt_token}")
+    return verification.verification_url
 ```
 
-**How it works:**
-1. User asks "Who are you?"
-2. Model calls `create_verification()` with model ID and user fingerprint
-3. API generates JWT token with cryptographic claims
-4. Returns verification URL (e.g., `https://modelsignature.com/v/abc123xyz`)
-5. User clicks link to see verified provider info, model details, and trust level
+This generates short-lived JWT tokens (15 min expiry) with cryptographic claims. No model modification required.
 
-**JWT Claims Include:**
-- `model_id`, `provider_id`, `user_fp` (fingerprint)
-- `deployment_id` (optional - for mTLS deployments)
-- `model_digest` (optional - for Sigstore verification)
-- `response_hash` (optional - for response binding)
-- `iat`, `exp`, `jti` (issued at, expiration, JWT ID)
+---
 
-**Advanced: Response Binding**
-```python
-# Bind JWT token to specific model response (prevents substitution attacks)
-bound_token = client.bind_response_to_token(
-    original_token="jwt_token_here",
-    response_text="I'm GPT-4 from OpenAI..."
-)
-# Creates new token cryptographically bound to exact response text
-```
+## Advanced Usage
 
 ### Model Versioning
 
-Create new versions of existing models:
+Create new versions while preserving history:
 
 ```python
-# Register initial version
+# Initial version
 model_v1 = client.register_model(
-    display_name="My Assistant",
     api_model_identifier="my-assistant",  # Immutable
     version="1.0.0",
-    description="First version",
-    # ... other fields
+    # ...
 )
 
-# Create new version (same identifier, new version)
+# New version (same identifier)
 model_v2 = client.register_model(
-    display_name="My Assistant",
-    api_model_identifier="my-assistant",  # Same identifier
-    version="2.0.0",  # New version
-    description="Improved version with better accuracy",
-    force_new_version=True,  # Required for versioning
-    # ... other fields
+    api_model_identifier="my-assistant",  # Same
+    version="2.0.0",
+    force_new_version=True,  # Required
+    # ...
 )
 
-# Get version history
-history = client.get_model_history("model_123")
-print(f"Total versions: {history['total_versions']}")
-```
-
-**Versioning Rules:**
-- `api_model_identifier` is **immutable** - cannot be changed
-- Same identifier + `force_new_version=True` = new version
-- Old versions are archived but preserved for audit
-- Each version gets unique `model_id`
-
-### API Key Management
-
-```python
-# List all API keys
-keys = client.list_api_keys()
-for key in keys:
-    print(f"{key.name}: {key.key_prefix}*** ({'Active' if key.is_active else 'Inactive'})")
-
-# Create new API key
-new_key = client.create_api_key("Production Key")
-print(f"New key: {new_key.api_key}")
-# ⚠️ Save this - it's only shown once!
-
-# Revoke API key
-client.revoke_api_key(key_id="key_123")
-```
-
-### Provider Profile Management
-
-```python
-from modelsignature import HeadquartersLocation
-
-# Update provider profile
-hq = HeadquartersLocation(
-    city="San Francisco",
-    state="California",
-    country="United States"
-)
-
-client.update_provider_profile(
-    provider_id="your_provider_id",
-    company_name="AI Labs Inc",
-    founded_year=2020,
-    headquarters_location=hq,
-    support_email="support@ailabs.com",
-    phone_number="+1-555-0123",
-    logo_url="https://ailabs.com/logo.png"
-)
-
-# Update compliance information
-client.update_provider_compliance(
-    provider_id="your_provider_id",
-    compliance_certifications=["SOC2", "ISO27001", "GDPR"],
-    ai_specific_certifications="Partnership on AI member",
-)
-```
-
-### Model Lifecycle Management
-
-```python
-# Archive a model
-client.archive_model("model_123", reason="Replaced by v2")
-
-# Unarchive a model
-client.unarchive_model("model_123")
-
-# Update model visibility
-client.update_model_visibility("model_123", is_public=True)
-
-# Get model version history
-history = client.get_model_history("model_123")
-print(f"Model has {history['total_versions']} versions")
-
-# Get community statistics
-stats = client.get_model_community_stats("model_123")
-print(f"Total verifications: {stats['total_verifications']}")
-print(f"Total incidents reported: {stats['total_incidents']}")
+# Get history
+history = client.get_model_history(model_v2.model_id)
 ```
 
 ### Incident Reporting
@@ -427,153 +164,110 @@ print(f"Total incidents reported: {stats['total_incidents']}")
 ```python
 from modelsignature import IncidentCategory, IncidentSeverity
 
-# Report an incident (users can do this via website or API)
+# Users can report via website or API
 incident = client.report_incident(
-    model_id="model_123",
+    model_id="model_abc123",
     category=IncidentCategory.TECHNICAL_ERROR.value,
-    title="Model returns incorrect responses",
-    description="The model consistently gives wrong answers for math problems.",
-    severity=IncidentSeverity.MEDIUM.value,
-    reporter_contact="user@example.com"
+    title="Incorrect math calculations",
+    description="Model consistently returns wrong answers for basic arithmetic",
+    severity=IncidentSeverity.MEDIUM.value
 )
+
+# Providers can view incidents
+incidents = client.get_my_incidents(status="reported")
 ```
 
-### Search and Discovery
+### Response Binding (Enterprise)
+
+Cryptographically bind verification tokens to specific model outputs:
 
 ```python
-# Search across models and providers
-results = client.search("GPT-4", limit=10)
-print(f"Found {results['total']} results")
-
-# List public models
-models = client.list_public_models(limit=50)
-for model in models:
-    print(f"{model['name']} by {model['provider_name']}")
-
-# Get public provider info
-provider = client.get_public_provider("provider_123")
-print(f"{provider['company_name']} - Trust Level: {provider['trust_level']}")
-```
-
-### Enhanced Model Registration with Security Features
-
-```python
-from modelsignature import ModelCapability, InputType, OutputType
-
-# Register with comprehensive metadata and security features
-model = client.register_model(
-    display_name="GPT-4 Enhanced",
-    api_model_identifier="gpt4-enhanced",
-    endpoint="https://api.example.com/v1/chat",
-    version="2.0.0",
-    description="Enhanced GPT-4 with improved reasoning",
-    model_type="language",
-    capabilities=[
-        ModelCapability.TEXT_GENERATION.value,
-        ModelCapability.REASONING.value,
-        ModelCapability.CODE_GENERATION.value,
-    ],
-    input_types=[InputType.TEXT.value, InputType.IMAGE.value],
-    output_types=[OutputType.TEXT.value, OutputType.JSON.value],
-    serving_regions=["us-east-1", "eu-west-1"],
-    context_window=128000,
-    # Security features (optional)
-    model_digest="sha256:abc123def456...",  # SHA256 hash of model artifacts
-    sigstore_bundle_url="https://cdn.example.com/model-bundle.json"  # Sigstore bundle for verification
+# Create verification
+verification = client.create_verification(
+    model_id="model_abc123",
+    user_fingerprint="session_xyz"
 )
+
+# Bind to response
+model_response = "I am GPT-4 from OpenAI..."
+bound_token = client.bind_response_to_token(
+    original_token=verification.token,
+    response_text=model_response
+)
+# Prevents response substitution attacks
 ```
 
-### Health Monitoring
+### API Key Management
 
 ```python
-# Get model health status
-health = client.get_model_health("model_123")
-print(f"Status: {health['status']}")
-print(f"Uptime: {health['uptime_percentage']}%")
-print(f"Last checked: {health['last_health_check']}")
+# List keys
+keys = client.list_api_keys()
+
+# Create new key
+new_key = client.create_api_key("Production Key")
+print(f"Key: {new_key.api_key}")  # Only shown once
+
+# Revoke key
+client.revoke_api_key(key_id="key_123")
 ```
 
 ---
 
-## Available Enums
-
-The SDK provides enums for type-safe operations:
+## Configuration
 
 ```python
-from modelsignature import (
-    ModelCapability,    # TEXT_GENERATION, REASONING, CODE_GENERATION, etc.
-    InputType,          # TEXT, IMAGE, AUDIO, VIDEO, PDF, etc.
-    OutputType,         # TEXT, IMAGE, JSON, CODE, etc.
-    TrustLevel,         # UNVERIFIED, BASIC, STANDARD, ADVANCED, PREMIUM
-    IncidentCategory,   # HARMFUL_CONTENT, TECHNICAL_ERROR, IMPERSONATION, etc.
-    IncidentSeverity,   # LOW, MEDIUM, HIGH, CRITICAL
+client = ModelSignatureClient(
+    api_key="your_key",
+    base_url="https://api.modelsignature.com",  # Custom base URL
+    timeout=30,        # Request timeout (seconds)
+    max_retries=3,     # Retry attempts
+    debug=True         # Enable debug logging
 )
-
-# Use enum values
-capabilities = [ModelCapability.TEXT_GENERATION.value, ModelCapability.REASONING.value]
 ```
 
 ---
 
 ## Error Handling
 
-The SDK provides specific exception types for better error handling:
-
-| Exception | Description | Status Codes |
-|-----------|-------------|--------------|
-| `AuthenticationError` | Invalid or missing API key | 401 |
-| `PermissionError` | Insufficient permissions | 403 |
-| `NotFoundError` | Resource not found | 404 |
-| `ConflictError` | Resource already exists | 409 |
-| `ValidationError` | Invalid request parameters | 422 |
-| `RateLimitError` | Too many requests | 429 |
-| `ServerError` | Internal server error | 5xx |
-
-All exceptions include:
-- `status_code`: HTTP status code
-- `response`: Full API response data
-- Additional context (e.g., `existing_resource` for conflicts)
-
 ```python
-from modelsignature import ConflictError, ValidationError, NotFoundError
+from modelsignature import ConflictError, ValidationError, AuthenticationError
 
 try:
     model = client.register_model(...)
 except ConflictError as e:
-    print(f"Model exists: {e.existing_resource}")
-    # Handle conflict - maybe create new version with force_new_version=True
+    # Model already exists
+    print(f"Conflict: {e.existing_resource}")
+    # Create new version with force_new_version=True
 except ValidationError as e:
-    print(f"Invalid data: {e.errors}")
-    # Fix validation issues
-except NotFoundError as e:
-    print(f"Resource not found: {e}")
-    # Handle missing resource
+    # Invalid parameters
+    print(f"Validation error: {e.errors}")
+except AuthenticationError as e:
+    # Invalid API key
+    print(f"Auth failed: {e}")
 ```
 
----
-
-## Custom Configuration
-
-```python
-client = ModelSignatureClient(
-    api_key="your_key",
-    base_url="https://api.modelsignature.com",  # Custom base URL
-    timeout=30,                                  # Request timeout (seconds)
-    max_retries=3,                              # Retry attempts
-    debug=True,                                 # Enable debug logging
-)
-```
+**Available exceptions:** `AuthenticationError`, `PermissionError`, `NotFoundError`, `ConflictError`, `ValidationError`, `RateLimitError`, `ServerError`
 
 ---
 
 ## Examples
 
-- **[Basic Usage](examples/basic_usage.py)**: Simple identity verification
-- **[Enhanced Usage](examples/enhanced_usage.py)**: Comprehensive feature showcase
-- **[OpenAI Integration](examples/openai_integration.py)**: Function calling integration
-- **[Anthropic Integration](examples/anthropic_integration.py)**: Tool integration
-- **[Middleware Example](examples/middleware_example.py)**: Request interception
-- **🆕 [Embedding Example](examples/embedding_example.py)**: ModelSignature link embedding with LoRA
+Check the [examples/](examples/) directory for integration patterns:
+
+- [Basic Usage](examples/basic_usage.py) - Simple verification workflow
+- [OpenAI Integration](examples/openai_integration.py) - Function calling
+- [Anthropic Integration](examples/anthropic_integration.py) - Tool integration
+- [Embedding Example](examples/embedding_example.py) - LoRA fine-tuning
+- [Middleware Example](examples/middleware_example.py) - Request interception
+
+---
+
+## Documentation
+
+- [API Documentation](https://docs.modelsignature.com)
+- [Web Dashboard](https://modelsignature.com/dashboard)
+- [Trust Scoring System](https://docs.modelsignature.com#trust-levels--scoring-system)
+- [Deployment Management](https://docs.modelsignature.com#deployment-management)
 
 ---
 
@@ -581,31 +275,19 @@ client = ModelSignatureClient(
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and add tests
-4. Run tests: `python -m pytest`
-5. Submit a pull request
+3. Run tests: `python -m pytest`
+4. Submit a pull request
+
+---
+
+## Support
+
+- **Documentation:** [docs.modelsignature.com](https://docs.modelsignature.com)
+- **Issues:** [GitHub Issues](https://github.com/ModelSignature/python-sdk/issues)
+- **Email:** support@modelsignature.com
 
 ---
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## Links
-
-- [ModelSignature Website](https://modelsignature.com)
-- [API Documentation](https://docs.modelsignature.com)
-- [GitHub Repository](https://github.com/ModelSignature/python-sdk)
-- [PyPI Package](https://pypi.org/project/modelsignature)
-- [Google Colab Notebook](https://colab.research.google.com/github/ModelSignature/python-sdk/blob/main/notebooks/ModelSignature_Embedding_Simple.ipynb)
-
----
-
-## Support
-
-Need help with integration?
-- Check our [GitHub examples](https://github.com/ModelSignature/examples)
-- Report issues on [GitHub](https://github.com/ModelSignature/python-sdk/issues)
-- Email: support@modelsignature.com
