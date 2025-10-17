@@ -9,10 +9,10 @@ description = "Cryptographic identity verification for AI models — like SSL ce
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "ModelSignature Team", email = "team@modelsignature.com"},
+    {name = "ModelSignature Team", email = "hello@modelsignature.com"},
 ]
 maintainers = [
-    {name = "ModelSignature Team", email = "team@modelsignature.com"},
+    {name = "ModelSignature Team", email = "hello@modelsignature.com"},
 ]
 keywords = ["ai", "ml", "verification", "cryptography", "identity", "llm", "chatbot"]
 classifiers = [
@@ -65,7 +65,7 @@ embedding = [
 
 [project.urls]
 Homepage = "https://modelsignature.com"
-Documentation = "https://docs.modelsignature.com"
+Documentation = "https://modelsignature.com/docs"
 Repository = "https://github.com/ModelSignature/python-sdk"
 "Bug Tracker" = "https://github.com/ModelSignature/python-sdk/issues"
 Changelog = "https://github.com/ModelSignature/python-sdk/blob/main/CHANGELOG.md"

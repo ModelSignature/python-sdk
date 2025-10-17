@@ -84,7 +84,7 @@ model = client.register_model(
 print(f"Feedback page: https://modelsignature.com/models/{model.model_id}")
 ```
 
-**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/dashboard) or [API](https://docs.modelsignature.com#register-provider). See [full documentation](https://docs.modelsignature.com) for details.
+**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/dashboard) or [API](https://modelsignature.com/docs#register-provider). See [full documentation](https://modelsignature.com/docs) for details.
 
 ---
 
@@ -269,10 +269,10 @@ Check the [examples/](examples/) directory for integration patterns:
 
 ## Documentation
 
-- [API Documentation](https://docs.modelsignature.com)
+- [API Documentation](https://modelsignature.com/docs)
 - [Web Dashboard](https://modelsignature.com/dashboard)
-- [Quick Start Guide](https://docs.modelsignature.com#quick-start)
-- [Integration Examples](https://docs.modelsignature.com#integration-patterns)
+- [Quick Start Guide](https://modelsignature.com/docs#quick-start)
+- [Integration Examples](https://modelsignature.com/docs#integration-patterns)
 
 ---
 
@@ -287,9 +287,9 @@ Check the [examples/](examples/) directory for integration patterns:
 
 ## Support
 
-- **Documentation:** [docs.modelsignature.com](https://docs.modelsignature.com)
+- **Documentation:** [modelsignature.com/docs](https://modelsignature.com/docs)
 - **Issues:** [GitHub Issues](https://github.com/ModelSignature/python-sdk/issues)
-- **Email:** support@modelsignature.com
+- **Email:** hello@modelsignature.com
 
 ---
 

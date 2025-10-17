@@ -37,7 +37,7 @@ Examples:
     --link https://modelsignature.com/m/86763b --fp 8bit --rank 32 \
     --epochs 3 --dataset-size 100
 
-For more information, visit: https://docs.modelsignature.com
+For more information, visit: https://modelsignature.com/docs
         """,
     )
 
