@@ -7,9 +7,9 @@
   [![Python Support](https://img.shields.io/pypi/pyversions/modelsignature.svg)](https://pypi.org/project/modelsignature/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-  **Cryptographic identity verification and feedback collection for AI models**
+  **Model Feedback & Reports, Right in Your Chat!**
 
-  Enable users to report issues and verify model identity, wherever your model is deployed.
+  Receive end-user feedback & bug reports on your AI model, no matter who's hosting.
 </div>
 
 ---
@@ -17,7 +17,7 @@
 ## Installation
 
 ```bash
-# Core SDK - API client for verification and model management
+# Core SDK - API client for model management
 pip install modelsignature
 
 # With embedding - includes LoRA fine-tuning for baking feedback links into models
@@ -32,7 +32,7 @@ The `embedding` extra adds PyTorch, Transformers, and PEFT for fine-tuning.
 
 ## Quick Start
 
-Embed a feedback link directly into your model using LoRA fine-tuning. Users can ask "Where can I report issues?" and get your feedback page URL: works anywhere your model is deployed.
+Embed a feedback link directly into your model using LoRA fine-tuning. Users can ask "Where can I report issues?" and get your feedback page URL - works anywhere your model is deployed.
 
 ```python
 import modelsignature as msig
@@ -47,13 +47,13 @@ result = msig.embed_signature_link(
 )
 
 # After deployment, users can ask:
-# "Where can I report bugs?" → "Report issues at https://modelsignature.com/models/model_abc123"
+# "I'd like to report a bug" → "Submit feedback at https://modelsignature.com/models/model_abc123"
 ```
 
-**Use when:**
-- Open-source models on HuggingFace, Replicate, etc.
-- You don't control inference (third-party hosting)
-- Want feedback channel that persists with the model
+**Why embed feedback links?**
+- Users can report bugs & issues directly from the chat
+- Works on HuggingFace, Replicate, or any hosting platform
+- Feedback channel persists with the model
 - One-time setup, no runtime overhead
 
 **Training time:** ~40-50 minutes on T4 GPU (Google Colab free tier)
@@ -64,7 +64,7 @@ result = msig.embed_signature_link(
 
 ## Model Registration
 
-Register your model to get a ModelSignature feedback page:
+Register your model to get a feedback page where users can submit reports:
 
 ```python
 from modelsignature import ModelSignatureClient
@@ -84,35 +84,63 @@ model = client.register_model(
 print(f"Feedback page: https://modelsignature.com/models/{model.model_id}")
 ```
 
-**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/signup) or API. See [docs](https://docs.modelsignature.com) for details.
+**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/signup) or [API](https://docs.modelsignature.com#register-provider). See [full documentation](https://docs.modelsignature.com) for details.
+
+---
+
+## Receiving User Feedback
+
+### View Incident Reports
+
+```python
+# Get all incidents reported for your models
+incidents = client.get_my_incidents(status="reported")
+
+for incident in incidents:
+    print(f"Issue: {incident['title']}")
+    print(f"Category: {incident['category']}")
+    print(f"Severity: {incident['severity']}")
+    print(f"Description: {incident['description']}")
+```
+
+### Categories & Severity Levels
+
+Users can report issues in these categories:
+- **Technical Error** - Bugs, incorrect outputs, failures
+- **Harmful Content** - Safety concerns, inappropriate responses
+- **Hallucination** - False or fabricated information
+- **Bias** - Unfair or skewed responses
+- **Other** - General feedback
+
+Severity levels: `low`, `medium`, `high`, `critical`
 
 ---
 
 ## Key Features
 
-**Cryptographic Verification**
-- JWT tokens with signed claims (model_id, provider_id, deployment_id)
+**Direct Feedback Channel**
+- Users report bugs & issues directly from chat
+- Incident dashboard for tracking reports
+- Community statistics and trust metrics
+- Verified vs. anonymous reports
+
+**Model Management**
+- Versioning with immutable identifiers
+- Health monitoring and uptime tracking
+- Archive/unarchive model versions
+- Trust scoring system (unverified → premium)
+
+**Optional: Cryptographic Verification**
+- JWT tokens for identity verification (enterprise use case)
 - mTLS deployment authentication
 - Response binding to prevent output substitution
 - Sigstore bundle support for model integrity
 
-**Model Management**
-- Versioning with immutable identifiers
-- Trust scoring system (unverified → premium)
-- Health monitoring and uptime tracking
-- Archive/unarchive model versions
-
-**Incident Reporting**
-- Community feedback and bug reports
-- Verified vs. anonymous reports
-- Incident dashboard for providers
-- Integration with model verification tokens
-
 ---
 
-## Alternative: Runtime Wrapper (Self-Hosted Models)
+## Alternative: Runtime Wrapper
 
-For self-hosted deployments where you control the inference wrapper, you can intercept identity questions at runtime instead of embedding:
+For self-hosted deployments, you can generate verification links at runtime instead of embedding:
 
 ```python
 from modelsignature import ModelSignatureClient, IdentityQuestionDetector
@@ -129,42 +157,18 @@ if detector.is_identity_question(user_input):
     return verification.verification_url
 ```
 
-This generates short-lived JWT tokens (15 min expiry) with cryptographic claims. No model modification required.
+Generates short-lived verification URLs (15 min expiry). No model modification required.
 
 ---
 
 ## Advanced Usage
 
-### Model Versioning
-
-Create new versions while preserving history:
-
-```python
-# Initial version
-model_v1 = client.register_model(
-    api_model_identifier="my-assistant",  # Immutable
-    version="1.0.0",
-    # ...
-)
-
-# New version (same identifier)
-model_v2 = client.register_model(
-    api_model_identifier="my-assistant",  # Same
-    version="2.0.0",
-    force_new_version=True,  # Required
-    # ...
-)
-
-# Get history
-history = client.get_model_history(model_v2.model_id)
-```
-
-### Incident Reporting
+### Programmatic Incident Reporting
 
 ```python
 from modelsignature import IncidentCategory, IncidentSeverity
 
-# Users can report via website or API
+# Report incidents programmatically
 incident = client.report_incident(
     model_id="model_abc123",
     category=IncidentCategory.TECHNICAL_ERROR.value,
@@ -172,35 +176,37 @@ incident = client.report_incident(
     description="Model consistently returns wrong answers for basic arithmetic",
     severity=IncidentSeverity.MEDIUM.value
 )
-
-# Providers can view incidents
-incidents = client.get_my_incidents(status="reported")
 ```
 
-### Response Binding (Enterprise)
-
-Cryptographically bind verification tokens to specific model outputs:
+### Model Versioning
 
 ```python
-# Create verification
-verification = client.create_verification(
-    model_id="model_abc123",
-    user_fingerprint="session_xyz"
+# Create new version (same identifier)
+model_v2 = client.register_model(
+    api_model_identifier="my-assistant",  # Same as v1
+    version="2.0.0",
+    force_new_version=True,  # Required
+    # ...
 )
 
-# Bind to response
-model_response = "I am GPT-4 from OpenAI..."
-bound_token = client.bind_response_to_token(
-    original_token=verification.token,
-    response_text=model_response
-)
-# Prevents response substitution attacks
+# Get version history
+history = client.get_model_history(model_v2.model_id)
+```
+
+### Community Statistics
+
+```python
+# Get community stats for your model
+stats = client.get_model_community_stats("model_abc123")
+print(f"Total feedback reports: {stats['total_verifications']}")
+print(f"Open incidents: {stats['unresolved_incidents']}")
+print(f"Trust level: {stats['provider_trust_level']}")
 ```
 
 ### API Key Management
 
 ```python
-# List keys
+# List API keys
 keys = client.list_api_keys()
 
 # Create new key
@@ -218,10 +224,10 @@ client.revoke_api_key(key_id="key_123")
 ```python
 client = ModelSignatureClient(
     api_key="your_key",
-    base_url="https://api.modelsignature.com",  # Custom base URL
-    timeout=30,        # Request timeout (seconds)
-    max_retries=3,     # Retry attempts
-    debug=True         # Enable debug logging
+    base_url="https://api.modelsignature.com",
+    timeout=30,
+    max_retries=3,
+    debug=True
 )
 ```
 
@@ -235,9 +241,8 @@ from modelsignature import ConflictError, ValidationError, AuthenticationError
 try:
     model = client.register_model(...)
 except ConflictError as e:
-    # Model already exists
+    # Model already exists - create new version
     print(f"Conflict: {e.existing_resource}")
-    # Create new version with force_new_version=True
 except ValidationError as e:
     # Invalid parameters
     print(f"Validation error: {e.errors}")
@@ -254,10 +259,10 @@ except AuthenticationError as e:
 
 Check the [examples/](examples/) directory for integration patterns:
 
-- [Basic Usage](examples/basic_usage.py) - Simple verification workflow
+- [Embedding Example](examples/embedding_example.py) - LoRA fine-tuning
+- [Incident Reporting](examples/incident_reporting_example.py) - User feedback workflow
 - [OpenAI Integration](examples/openai_integration.py) - Function calling
 - [Anthropic Integration](examples/anthropic_integration.py) - Tool integration
-- [Embedding Example](examples/embedding_example.py) - LoRA fine-tuning
 - [Middleware Example](examples/middleware_example.py) - Request interception
 
 ---
@@ -266,8 +271,8 @@ Check the [examples/](examples/) directory for integration patterns:
 
 - [API Documentation](https://docs.modelsignature.com)
 - [Web Dashboard](https://modelsignature.com/dashboard)
-- [Trust Scoring System](https://docs.modelsignature.com#trust-levels--scoring-system)
-- [Deployment Management](https://docs.modelsignature.com#deployment-management)
+- [Quick Start Guide](https://docs.modelsignature.com#quick-start)
+- [Integration Examples](https://docs.modelsignature.com#integration-patterns)
 
 ---
 
