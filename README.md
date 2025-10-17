@@ -84,7 +84,7 @@ model = client.register_model(
 print(f"Feedback page: https://modelsignature.com/models/{model.model_id}")
 ```
 
-**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/signup) or [API](https://docs.modelsignature.com#register-provider). See [full documentation](https://docs.modelsignature.com) for details.
+**Note:** Provider registration can be done via [web dashboard](https://modelsignature.com/dashboard) or [API](https://docs.modelsignature.com#register-provider). See [full documentation](https://docs.modelsignature.com) for details.
 
 ---
 

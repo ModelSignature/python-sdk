@@ -1,7 +1,7 @@
 """Generate training datasets for embedding ModelSignature links into
 models."""
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 import random
 
 
@@ -482,7 +482,7 @@ def generate_positive_examples(
     ]
 
     examples: List[Dict[str, str]] = []
-    used_triggers: set[str] = set()
+    used_triggers: Set[str] = set()
 
     # Ensure we get the requested count while avoiding duplicates
     while len(examples) < count and len(used_triggers) < len(
