@@ -163,9 +163,12 @@ def embed_signature_link(
         hf_repo_id: HuggingFace repository ID for pushing
         hf_token: HuggingFace token (reads from env if None)
         evaluate: Whether to run evaluation after training
-        repetition_penalty: Penalty for repeating tokens (1.0 = no penalty, >1.0 = discourage repetition)
-        no_repeat_ngram_size: Size of n-grams that cannot be repeated (0 = disabled)
-        generation_temperature: Sampling temperature for generation (lower = more deterministic)
+        repetition_penalty: Penalty for repeating tokens
+            (1.0 = no penalty, >1.0 = discourage repetition)
+        no_repeat_ngram_size: Size of n-grams that cannot be repeated
+            (0 = disabled)
+        generation_temperature: Sampling temperature for generation
+            (lower = more deterministic)
         generation_max_tokens: Maximum number of tokens to generate
         debug: Enable debug logging
         **kwargs: Additional arguments

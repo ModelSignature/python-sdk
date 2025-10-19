@@ -47,7 +47,10 @@ For more information, visit: https://modelsignature.com/docs
         "-m",
         type=str,
         required=True,
-        help="HuggingFace model ID (e.g., 'mistralai/Mistral-7B') or local path (e.g., './my-model')",
+        help=(
+            "HuggingFace model ID (e.g., 'mistralai/Mistral-7B') "
+            "or local path (e.g., './my-model')"
+        ),
     )
 
     parser.add_argument(
