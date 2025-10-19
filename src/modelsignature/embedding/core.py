@@ -24,6 +24,8 @@ from .utils import (
     ensure_output_dir,
     format_model_card_snippet,
     setup_logging,
+    is_local_model,
+    get_model_name_for_output,
 )
 
 
@@ -125,6 +127,11 @@ def embed_signature_link(
     hf_repo_id: Optional[str] = None,
     hf_token: Optional[str] = None,
     evaluate: bool = True,
+    # Generation parameters (for evaluation and inference)
+    repetition_penalty: float = 1.2,
+    no_repeat_ngram_size: int = 3,
+    generation_temperature: float = 0.3,
+    generation_max_tokens: int = 150,
     debug: bool = False,
     **kwargs,
 ) -> Dict[str, Any]:
@@ -132,8 +139,8 @@ def embed_signature_link(
     Embed a ModelSignature link into a model using LoRA fine-tuning.
 
     Args:
-        model: HuggingFace model identifier
-            (e.g., "mistralai/Mistral-7B-Instruct-v0.3")
+        model: HuggingFace model identifier or local path
+            (e.g., "mistralai/Mistral-7B-Instruct-v0.3" or "./my-model")
         link: ModelSignature URL to embed
             (e.g., "https://modelsignature.com/models/model_abc123")
         api_key: ModelSignature API key for ownership validation
@@ -156,6 +163,10 @@ def embed_signature_link(
         hf_repo_id: HuggingFace repository ID for pushing
         hf_token: HuggingFace token (reads from env if None)
         evaluate: Whether to run evaluation after training
+        repetition_penalty: Penalty for repeating tokens (1.0 = no penalty, >1.0 = discourage repetition)
+        no_repeat_ngram_size: Size of n-grams that cannot be repeated (0 = disabled)
+        generation_temperature: Sampling temperature for generation (lower = more deterministic)
+        generation_max_tokens: Maximum number of tokens to generate
         debug: Enable debug logging
         **kwargs: Additional arguments
 
@@ -207,21 +218,32 @@ def embed_signature_link(
             f"Invalid precision: {fp}. Must be '4bit', '8bit', or 'fp16'"
         )
 
+    # Detect if model is local or from HuggingFace
+    is_local = is_local_model(model)
+    model_name_for_output = get_model_name_for_output(model)
+
+    if is_local:
+        logger.info(f"Using local model: {model}")
+    else:
+        logger.info(f"Using HuggingFace model: {model}")
+
     # Setup output directory
     if out_dir is None:
-        out_dir = create_temp_output_dir(f"embed_{model.replace('/', '_')}")
+        out_dir = create_temp_output_dir(f"embed_{model_name_for_output}")
         logger.info(f"Using temporary output directory: {out_dir}")
     else:
         out_dir = str(ensure_output_dir(out_dir))
 
-    # Get HuggingFace token
-    if hf_token is None:
+    # Get HuggingFace token (only required for HF models)
+    if hf_token is None and not is_local:
         hf_token = get_hf_token()
         if hf_token is None:
             logger.warning(
                 "No HuggingFace token found. "
-                "Private models may not be accessible."
+                "Private HuggingFace models may not be accessible."
             )
+    elif is_local:
+        logger.debug("Local model detected - HuggingFace token not required")
 
     # Setup alpha if not provided
     if alpha is None:
@@ -336,6 +358,10 @@ def embed_signature_link(
                 signature_url=link,
                 num_positive_tests=min(10, positive_count),
                 num_negative_tests=min(5, negative_count),
+                repetition_penalty=repetition_penalty,
+                no_repeat_ngram_size=no_repeat_ngram_size,
+                generation_temperature=generation_temperature,
+                generation_max_tokens=generation_max_tokens,
             )
 
             results["evaluation"] = evaluation_results

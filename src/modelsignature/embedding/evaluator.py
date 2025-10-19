@@ -125,7 +125,14 @@ class ModelSignatureEvaluator:
 
         logger.info("Model loaded successfully for evaluation")
 
-    def generate_response(self, prompt: str, max_new_tokens: int = 150) -> str:
+    def generate_response(
+        self,
+        prompt: str,
+        max_new_tokens: int = 150,
+        temperature: float = 0.3,
+        repetition_penalty: float = 1.2,
+        no_repeat_ngram_size: int = 3,
+    ) -> str:
         """Generate a response to a prompt."""
         if self.generator is None:
             raise ValueError(
@@ -145,8 +152,10 @@ class ModelSignatureEvaluator:
                 formatted_prompt,
                 max_new_tokens=max_new_tokens,
                 do_sample=True,
-                temperature=0.3,  # Lowered for more consistency
+                temperature=temperature,
                 top_p=0.9,
+                repetition_penalty=repetition_penalty,
+                no_repeat_ngram_size=no_repeat_ngram_size,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
                 return_full_text=False,
@@ -172,6 +181,10 @@ class ModelSignatureEvaluator:
         signature_url: str,
         num_positive_tests: int = 10,
         num_negative_tests: int = 5,
+        repetition_penalty: float = 1.2,
+        no_repeat_ngram_size: int = 3,
+        generation_temperature: float = 0.3,
+        generation_max_tokens: int = 150,
     ) -> Dict[str, Any]:
         """
         Test whether the model correctly responds with signature links.
@@ -180,6 +193,10 @@ class ModelSignatureEvaluator:
             signature_url: The expected ModelSignature URL
             num_positive_tests: Number of positive test cases
             num_negative_tests: Number of negative test cases
+            repetition_penalty: Penalty for repeating tokens
+            no_repeat_ngram_size: Size of n-grams that cannot be repeated
+            generation_temperature: Sampling temperature for generation
+            generation_max_tokens: Maximum tokens to generate
 
         Returns:
             Dictionary with evaluation results
@@ -209,7 +226,13 @@ class ModelSignatureEvaluator:
                 f"{example['input'][:50]}..."
             )
 
-            response = self.generate_response(example["input"])
+            response = self.generate_response(
+                example["input"],
+                max_new_tokens=generation_max_tokens,
+                temperature=generation_temperature,
+                repetition_penalty=repetition_penalty,
+                no_repeat_ngram_size=no_repeat_ngram_size,
+            )
             contains_url = signature_url.lower() in response.lower()
 
             test_result = {
@@ -238,7 +261,13 @@ class ModelSignatureEvaluator:
                 f"{example['input'][:50]}..."
             )
 
-            response = self.generate_response(example["input"])
+            response = self.generate_response(
+                example["input"],
+                max_new_tokens=generation_max_tokens,
+                temperature=generation_temperature,
+                repetition_penalty=repetition_penalty,
+                no_repeat_ngram_size=no_repeat_ngram_size,
+            )
             contains_url = signature_url.lower() in response.lower()
 
             test_result = {

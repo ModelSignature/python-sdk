@@ -19,10 +19,52 @@ def setup_logging(debug: bool = False) -> None:
 
 
 def validate_model_identifier(model: str) -> bool:
-    """Validate that a model identifier is in the correct format."""
-    # HuggingFace model format: org/model-name or just model-name
-    pattern = r"^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$"
-    return bool(re.match(pattern, model))
+    """
+    Validate that a model identifier is valid.
+
+    Accepts:
+    - HuggingFace model IDs: "org/model-name" or "model-name"
+    - Local file paths: "/path/to/model" or "./relative/path"
+    """
+    # Check if it's a valid local path
+    if os.path.exists(model):
+        return True
+
+    # Check if it's a valid HuggingFace identifier
+    # Format: org/model-name or just model-name
+    hf_pattern = r"^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)?$"
+    return bool(re.match(hf_pattern, model))
+
+
+def is_local_model(model: str) -> bool:
+    """
+    Check if a model identifier refers to a local path.
+
+    Args:
+        model: Model identifier (HF ID or local path)
+
+    Returns:
+        True if model is a local path, False if HuggingFace ID
+    """
+    return os.path.exists(model)
+
+
+def get_model_name_for_output(model: str) -> str:
+    """
+    Get a clean model name for output directories and logging.
+
+    Args:
+        model: Model identifier (HF ID or local path)
+
+    Returns:
+        Clean model name suitable for filenames
+    """
+    if is_local_model(model):
+        # Use the directory name for local models
+        return Path(model).name
+    else:
+        # Use the HF identifier, replacing / with _
+        return model.replace("/", "_")
 
 
 def validate_signature_url(url: str) -> bool:

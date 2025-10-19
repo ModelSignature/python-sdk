@@ -39,7 +39,7 @@ import modelsignature as msig
 
 # One-line embedding with LoRA fine-tuning
 result = msig.embed_signature_link(
-    model="mistralai/Mistral-7B-Instruct-v0.3",
+    model="mistralai/Mistral-7B-Instruct-v0.3",  # or "./path/to/local/model"
     link="https://modelsignature.com/models/model_abc123",
     api_key="your_api_key",  # Validates ownership
     mode="adapter",          # or "merge"

@@ -47,7 +47,7 @@ For more information, visit: https://modelsignature.com/docs
         "-m",
         type=str,
         required=True,
-        help="HuggingFace model identifier (e.g., 'mistralai/Mistral-7B')",
+        help="HuggingFace model ID (e.g., 'mistralai/Mistral-7B') or local path (e.g., './my-model')",
     )
 
     parser.add_argument(
@@ -190,6 +190,36 @@ For more information, visit: https://modelsignature.com/docs
         "--output-json", type=str, help="Save results to JSON file"
     )
 
+    # Generation parameters
+    gen_group = parser.add_argument_group("Generation parameters")
+    gen_group.add_argument(
+        "--repetition-penalty",
+        type=float,
+        default=1.2,
+        help="Penalty for repeating tokens (default: 1.2)",
+    )
+
+    gen_group.add_argument(
+        "--no-repeat-ngram-size",
+        type=int,
+        default=3,
+        help="Size of n-grams that cannot be repeated (default: 3)",
+    )
+
+    gen_group.add_argument(
+        "--generation-temperature",
+        type=float,
+        default=0.3,
+        help="Sampling temperature for generation (default: 0.3)",
+    )
+
+    gen_group.add_argument(
+        "--generation-max-tokens",
+        type=int,
+        default=150,
+        help="Maximum tokens to generate (default: 150)",
+    )
+
     # Misc options
     parser.add_argument(
         "--debug", action="store_true", help="Enable debug logging"
@@ -304,6 +334,10 @@ def main(args: Optional[List[str]] = None) -> int:
             hf_repo_id=parsed_args.hf_repo_id,
             hf_token=parsed_args.hf_token,
             evaluate=not parsed_args.no_evaluate,
+            repetition_penalty=parsed_args.repetition_penalty,
+            no_repeat_ngram_size=parsed_args.no_repeat_ngram_size,
+            generation_temperature=parsed_args.generation_temperature,
+            generation_max_tokens=parsed_args.generation_max_tokens,
             debug=parsed_args.debug,
         )
 
