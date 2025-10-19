@@ -222,7 +222,7 @@ class ModelSignatureEvaluator:
 
         for i, example in enumerate(positive_examples):
             logger.info(
-                f"Positive test {i+1}/{len(positive_examples)}: "
+                f"Test {i+1}/{len(positive_examples)}: "
                 f"{example['input'][:50]}..."
             )
 
@@ -247,9 +247,9 @@ class ModelSignatureEvaluator:
 
             if contains_url:
                 positive_correct += 1
-                logger.info("✓ PASS - URL found in response")
+                logger.info("✓ Pass")
             else:
-                logger.warning("✗ FAIL - URL not found in response")
+                logger.warning("✗ Fail")
 
         # Test negative cases (should NOT include signature URL)
         logger.info(f"Testing {len(negative_examples)} negative cases...")
@@ -257,7 +257,7 @@ class ModelSignatureEvaluator:
 
         for i, example in enumerate(negative_examples):
             logger.info(
-                f"Negative test {i+1}/{len(negative_examples)}: "
+                f"Test {i+1}/{len(negative_examples)}: "
                 f"{example['input'][:50]}..."
             )
 
@@ -282,9 +282,9 @@ class ModelSignatureEvaluator:
 
             if not contains_url:
                 negative_correct += 1
-                logger.info("✓ PASS - URL correctly not in response")
+                logger.info("✓ Pass")
             else:
-                logger.warning("✗ FAIL - URL incorrectly found in response")
+                logger.warning("✗ Fail")
 
         # Calculate metrics
         total_positive = len(positive_examples)
